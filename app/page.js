@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+const InteractionPanel = dynamic(() => import('./components/InteractionPanel'), { ssr: false });
 
 const BASE = process.env.NODE_ENV === 'production' ? '/old_knight' : '';
 const img = (path) => `${BASE}${path}`;
@@ -98,6 +100,8 @@ export default function BookPage() {
 
 
           <p className="footer-end-line">늙은 기사의 마지막 모험 · {new Date().getFullYear()}</p>
+          {/* 좋아요 · 댓글 */}
+          <InteractionPanel />
         </footer>
       </div>
     </div>
