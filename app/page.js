@@ -1,187 +1,165 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const storyPages = [
-  {
-    title: '늙은 기사의 마지막 모험',
-    paragraphs: [
-      '왕국의 사람들은 모두 그를 알고 있었다. 그는 왕국에서 가장 오래된 기사였다. 어린 시절부터 검을 들었고, 늙어서는 왕과 여왕을 지켰다. 왕자가 태어났을 때는 밤새 곁을 지켰고, 공주가 처음 걸음마를 뗐을 때는 혹시 넘어질까 뒤를 따라다녔다.',
-      '누군가는 그를 충직하다고 불렀고, 누군가는 우직하다고 불렀다. 하지만 그는 그런 말에 관심이 없었다. 그저 자신의 왕국과 가족을 지키는 것이 행복했다. 그러나 세상은 늘 변한다. 어느 날 왕은 그를 불렀다.',
-      '“잠시만 여기서 기다려라.” 왕의 목소리는 평소와 같았다. 기사는 고개를 끄덕였다. 왕은 마차에 올라탔고 떠나갔다. 기사는 기다렸다. 하루가 지나고 밤이 찾아왔다. 추위가 찾아왔다. 다음 날 아침이 밝아도 그는 움직이지 않았다. 왕이 기다리라고 했으니까. 둘째 날 저녁이 되었을 때, 기사는 결국 쓰러졌다.',
-    ],
+const BOOK_DATA = {
+  title: '달빛 아래의 사색',
+  author: '김작가',
+  coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?q=80&w=1000',
+  pages: [
+    {
+      id: 1,
+      illustration: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=600',
+      content:
+        '첫 번째 단락입니다. 바다의 잔잔한 파도 소리를 들으며 주인공은 깊은 생각에 잠겼습니다.\n\n지나간 여름날의 기억들이 파도와 함께 밀려왔다 사라지기를 반복했습니다. 그 속에서 찾은 작은 의미는 무엇이었을까요?',
+    },
+    {
+      id: 2,
+      illustration: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600',
+      content:
+        '두 번째 단락입니다. 깊은 숲속을 걷다 보면 세상의 모든 소음이 잦아듭니다.\n\n초록빛 잎사귀 사이로 쏟아지는 햇살은 마치 누군가의 따뜻한 위로처럼 어깨를 감싸 안았습니다. 그는 한 걸음 더 내딛기로 결심했습니다.',
+    },
+  ],
+  authorNote: {
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300',
+    text:
+      '이 책을 끝까지 읽어주신 모든 독자분들께 진심으로 감사드립니다. 바쁜 일상 속에서 잠시나마 숨을 고를 수 있는 시간이 되었기를 바랍니다. 다음 이야기로 다시 찾아뵙겠습니다.',
   },
-  {
-    title: '낯선 곳에서의 깨달음',
-    paragraphs: [
-      '눈을 뜨자 낯선 천장이 보였다. “정신이 드십니까?” 젊은 용병 하나가 물었다. 기사는 몸을 일으키려 했지만 온몸이 무거웠다. “주근은 어디로 가셨지?” 용병은 잠시 침묵했다. “당신은 버려진 겁니다.” 기사는 웃었다. “그럴 리 없네.” “현실을 보세요.” “그럴 리 없네.”',
-      '용병은 한숨을 쉬었다. “그럼 왜 아무도 안 돌아왔죠?” 기사는 대답하지 못했다. 하지만 떠나기 직전의 모습이 떠올랐다. 마차 창문 너머로 울고 있던 왕자. 그리고 공주. 그 아이들은 울고 있었다. 그렇다면 분명 이유가 있는 것이다. 그는 그렇게 믿었다. “난 돌아가야 하네.”',
-      '용병이 미간을 찌푸렸다. “어디로요?” “왕국으로.” “어디 있는지는 압니까?” 기사는 잠시 생각했다. 그리고 담담히 말했다. “느껴진다네.” 용병은 황당하다는 듯 웃었다. “그런 걸로 길을 찾을 수 있습니까?” “평생 함께 살았으니 알 수 있네.”',
-      '용병은 몇 시간 동안 그를 설득했다. 그러나 늙은 기사는 묵묵히 들을 뿐 생각을 바꾸지 않았다. 결국 용병이 포기했다. “내일 아침에 출발하세요.” “고맙네.” “그리고 조심하십시오… 밖은 괴물로 가득합니다.”',
-    ],
-  },
-  {
-    title: '길 위의 괴물',
-    paragraphs: [
-      '다음 날 새벽. 기사는 길을 떠났다. 그는 왕국이 있는 방향을 모른다. 지도도 없다. 단지 느낌만 있었다. 그러나 이상하게도 그것만으로 충분했다. 얼마나 걸었을까, 멀리서 굉음이 들려왔다. 곧 검은 형체들이 번개처럼 지나갔다. 너무 빨라 형태조차 보이지 않았다.',
-      '기사는 식은땀을 흘렸다. ‘저것이 괴물인가.’ 그것들은 쉼 없이 길 위를 달렸다. 하지만 왕국으로 가려면 반드시 이 길을 지나야 한다. 기사는 이를 악물고 뛰었다. 그 순간, 엄청난 속도의 괴물 하나가 눈앞까지 다가왔다. 기사는 죽음을 직감했다.',
-      '하지만 괴물은 갑자기 방향을 틀어 그를 피해갔다. 그리고 안에서 누군가 중얼거렸다. “불쌍한 놈…” 기사는 그제야 괴물의 모습을 보았다. 그것은 마차였다. 귀족들이 타는 화려한 마차. 심지어 자신도 타본 적 있는. 자신을 버리고 떠났던 바로 그 마차.',
-    ],
-  },
-  {
-    title: '배고픔과 전투',
-    paragraphs: [
-      '배고픔이 찾아오기 시작했다. 처음에는 참을 만했다. 하지만 시간이 지날수록 견디기 어려워졌다. 그때 무장한 용병들이 나타났다. 그들은 기사를 발견하자마자 무기를 들었다. “멈춰!” 기사는 손을 들었다. “싸우고 싶지 않네.” 하지만 그들은 듣지 않았다.',
-      '마치 전투에 미친 사람들처럼 달려들었다. 기사는 계속 피했다. 계속 말했다. 하지만 소용없었다. 결국 그는 검을 휘둘렀다. 용병들이 쓰러졌다. 전투가 끝났을 때. 기사는 무릎을 꿇었다. 배가 고팠다. 너무 고팠다. 목도 말랐다. 정신이 흐려졌다.',
-      '안 된다는 것을 안다. 절대 해서는 안 된다는 것도 안다. 하지만 본능은 이성을 삼켜 버렸다. 그날 밤. 늙은 기사는 처음으로 금기를 깨뜨렸다.',
-    ],
-  },
-  {
-    title: '가까워지는 왕국',
-    paragraphs: [
-      '이후로도 그는 계속 걸었다. 몸은 점점 망가졌다. 털은 엉켰고, 피는 말라붙었다. 눈은 충혈되었다. 하지만 그는 멈추지 않았다. 왕국이 가까워지고 있었다. 느낄 수 있었다. 어느 날 다시 마차들이 보였다. 이번에는 수십 대였다. 그리고 많은 귀족들이 길을 걷고 있었다.',
-      '기사는 안도했다. ‘이제 가까운 것이다.’ 그러나 귀족들의 반응은 이상했다. “저리 가!” “괴물이다!” “살려줘!” 그들은 비명을 질렀다. 기사는 입가를 닦았다. 손에 피가 묻어 나왔다. 아마 그것 때문일 것이다. 그는 아무 말도 하지 않았다. 그저 더 빨리 앞으로 달렸다.',
-    ],
-  },
-  {
-    title: '익숙한 길',
-    paragraphs: [
-      '마침내 익숙한 풍경이 나타났다. 왕자와 공주를 경호하며 걸었던 길. 꽃밭. 분수. 작은 언덕. 그는 눈물을 흘렸다. 돌아왔다. 정말 돌아왔다. 하지만 기쁨은 오래가지 않았다. 경비대가 길을 막았다. 무장을 한 채였다. “비켜주게.” 기사가 말했다. “난 왕자님을 만나야 하네.”',
-      '그러나 경비대는 무기를 겨눴다. 그는 싸우지 않았다. 그저 달아났다. 그리고 도망치던 중 익숙한 얼굴을 발견했다. 왕과도 친했던 귀족. 그리고 여기사. 기사는 반가운 마음에 달려갔다. “도와주게!” 귀족은 비명을 지르며 도망쳤다.',
-      '여기사는 당황한 표정으로 그를 바라봤다. “대체 무슨 일이 있었던 겁니까?” 그녀는 물었다. 하지만 귀족이 소리쳤다. “가까이 가지 마!” 여기사는 끝내 뒤돌아 달아났다. 그 순간. 기사는 처음으로 절망했다. 그러나 포기하지 않았다. 왕자님과 공주님만 만나면 된다. 그 아이들만 만나면.',
-    ],
-  },
-  {
-    title: '성문 앞에서',
-    paragraphs: [
-      '해가 질 무렵. 드디어 왕국이 보였다. 기사는 울면서 달렸다. 그러나 성문은 열리지 않았다. 그는 계속 두드렸다. 소리쳤다. 애원했다. 하지만 아무도 열어주지 않았다. 그리고 성벽 위. 왕이 있었다. 왕자도 있었다. 공주도 있었다.',
-      '왕자와 공주는 금방이라도 뛰어내릴 것처럼 울고 있었다. 그러나 왕이 그들을 붙잡았다. 기사는 계속 외쳤다. 목이 터져라 외쳤다. 하지만 점점 졸음이 밀려왔다. 다리가 풀리고 시야가 흐려졌다.',
-    ],
-  },
-  {
-    title: '마지막 순간',
-    paragraphs: [
-      '눈을 떴을 때. 놀랍게도 왕과 왕자, 공주가 보였다. 기사는 웃었다. 드디어 돌아왔다. 몸을 일으키려 했다. 그러나 움직일 수 없었다. 양팔과 다리가 묶여 있었다. 그는 웃었다. ‘분명 치료 때문일 것이다. 왕자님이 곧 풀어줄 것이다.’',
-      '시간이 흘렀다. 문이 열리자 주사기를 든 의사가 들어왔다. 그제야 기사는 안심했다. 정말 치료받는 것이었다. 왕자와 공주는 계속 울고 있었다. 기사는 미소 지었다. “걱정하지 마십시오.” 그의 목소리는 갈라져 있었다. “저는 괜찮습니다.”',
-      '의사가 주사기를 준비했다. 왕자는 흐느끼며 다가왔다. 그리고 떨리는 손으로 그의 머리를 쓰다듬었다. “미안해…” 왕자의 눈물이 떨어졌다. “정말 미안해…” 기사는 이해할 수 없었다. 왜 사과하는 걸까. “난 너를 버리고 싶지 않았어…” 왕자의 목소리가 무너졌다.',
-      '“그런데 아빠가… 네가 혹시라도 사람을 먹었다면 죽여야 한대…” 공주가 오열했다. 왕자는 끝내 울음을 터뜨렸다. “나라의 법이 그렇대…” 기사는 멍하니 듣고 있었다. “너가 그럴 리 없다는 거 아는데…” 왕자의 손이 떨렸다. “너 입에 묻은 건 동물 피잖아…” 눈물이 그의 털 위로 떨어졌다.',
-      '“그런데 왜…” 주사가 천천히 들어왔다. 시야가 흐려졌다. 왕자의 얼굴도. 공주의 얼굴도. 점점 멀어졌다. “미안해…” “내가 너의 주인이어서 미안해…” 왕자는 끝없이 울며 그의 머리를 안았다. “다음 생에는…” 의식이 사라졌다.',
-      '“다음 생에는 꼭 개가 아니라 인간으로 태어나서…” 마지막까지 충직했던 늙은 기사는 조용히 눈을 감았다. “나랑 친하게 지내자.” “사랑해.”',
-    ],
-  },
-  {
-    title: '작가의 말',
-    paragraphs: [
-      '먼저 이 책을 읽어 주신 모든 분들께 감사의 말씀을 드립니다. 그리고 한편으로는 작은 사과를 전하고 싶습니다. 이 책은 일반적인 문체와 달리, 하나의 긴 문장으로 이어질 수 있는 내용들을 짧게 나누어 표현했습니다.',
-      '그래서 읽는 동안 다소 어색하거나 불편하게 느끼신 분들도 계셨을 것이라 생각합니다. 제가 이러한 방식을 선택한 이유는 이 이야기를 ‘사람’이 아닌 ‘개’의 시선에서 그리고 싶었기 때문입니다.',
-      '사람보다 단순하게 세상을 바라보고, 생각도 조금씩 이어 나가는 존재라면 이야기를 어떻게 받아들이고 표현할지 상상해 보았습니다. 그래서 이야기의 내용뿐만 아니라 문장의 구조와 흐름에도 그 시선을 담고자 했습니다.',
-      '부족한 글이지만 끝까지 함께해 주셔서 진심으로 감사합니다. 이 책이 여러분께 작은 여운으로 남기를 바랍니다.',
-      '감사합니다. — 작가 드림',
-    ],
-    isFinal: true,
-  },
-];
+};
 
 export default function Page() {
-  const [pageIndex, setPageIndex] = useState(0);
-  const [likes, setLikes] = useState(0);
-  const [liked, setLiked] = useState(false);
-  const [commentText, setCommentText] = useState('');
-  const [comments, setComments] = useState([]);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [likes, setLikes] = useState(128);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [comments, setComments] = useState([
+    { id: 1, name: '새벽의 사색가 402', text: '지하철에서 읽다가 울컥했네요. 감사합니다.' },
+    { id: 2, name: '푸른 연필 712', text: '여운이 길게 남는 작품이에요.' },
+  ]);
+  const [newComment, setNewComment] = useState('');
 
-  const page = useMemo(() => storyPages[pageIndex], [pageIndex]);
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        setScrollProgress((window.scrollY / totalHeight) * 100);
+      }
+    };
 
-  const nextPage = () => setPageIndex((current) => Math.min(current + 1, storyPages.length - 1));
-  const prevPage = () => setPageIndex((current) => Math.max(current - 1, 0));
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLike = () => {
-    if (!liked) {
-      setLikes((count) => count + 1);
-      setLiked(true);
+    if (!hasLiked) {
+      setLikes((prev) => prev + 1);
+      setHasLiked(true);
+    } else {
+      setLikes((prev) => Math.max(prev - 1, 0));
+      setHasLiked(false);
     }
   };
 
   const handleCommentSubmit = (event) => {
     event.preventDefault();
-    const trimmed = commentText.trim();
-    if (!trimmed) return;
-    setComments((current) => [trimmed, ...current]);
-    setCommentText('');
+    if (!newComment.trim()) return;
+
+    const anonymousNames = ['익명의 독자', '밤하늘 나그네', '달빛 추적자', '종이비행기'];
+    const randomName = `${anonymousNames[Math.floor(Math.random() * anonymousNames.length)]} ${Math.floor(Math.random() * 900) + 100}`;
+
+    setComments((current) => [
+      ...current,
+      { id: Date.now(), name: randomName, text: newComment.trim() },
+    ]);
+    setNewComment('');
   };
 
   return (
-    <main className="next-page">
-      <section className="hero-section">
-        <div className="hero-card">
-          <div className="hero-copy">
-            <p className="eyebrow">동화책 Next.js 버전</p>
-            <h1>늙은 기사의 마지막 모험</h1>
-            <p className="hero-description">페이지 넘김 버튼과 마지막 페이지 댓글 공간을 함께 즐겨보세요.</p>
-          </div>
-          <div className="cover-image-wrapper">
-            <img src="/images/start.jpeg" alt="표지 이미지" className="cover-image" />
-          </div>
+    <div className="mobile-scroll-book">
+      <div className="sticky-bar">
+        <div className="top-row">
+          <span className="eyebrow">Reading Now</span>
+          <h1 className="sticky-title">{BOOK_DATA.title}</h1>
+        </div>
+        <div className="progress-track">
+          <div className="progress-fill" style={{ width: `${scrollProgress}%` }} />
+        </div>
+      </div>
+
+      <section className="cover-section">
+        <div className="book-cover">
+          <img src={BOOK_DATA.coverImage} alt="Cover" />
+        </div>
+        <h2>{BOOK_DATA.title}</h2>
+        <p>{BOOK_DATA.author} 지음</p>
+        <div className="cover-hint">
+          <span>위로 스크롤하여 읽기</span>
+          <span>↓</span>
         </div>
       </section>
 
-      <section className="story-section">
-        <div className="story-card">
-          <div className="story-header">
-            <h2>{page.title}</h2>
-            <p className="page-indicator">{pageIndex + 1} / {storyPages.length}</p>
-          </div>
-          <div className="story-content">
-            {page.paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
-          <div className="story-controls">
-            <button onClick={prevPage} disabled={pageIndex === 0}>이전 페이지</button>
-            <button onClick={nextPage} disabled={pageIndex === storyPages.length - 1}>다음 페이지</button>
-          </div>
-        </div>
-      </section>
-
-      {page.isFinal && (
-        <section className="final-section">
-          <div className="final-card">
-            <div className="final-image-wrapper">
-              <img src="/images/end.jpeg" alt="마지막 삽화" className="final-image" />
+      <section className="page-section">
+        {BOOK_DATA.pages.map((page) => (
+          <article key={page.id} className="page-card">
+            <div className="page-illustration">
+              <img src={page.illustration} alt={`illustration-${page.id}`} />
             </div>
-            <div className="reaction-card">
-              <div className="like-row">
-                <button onClick={handleLike} className={liked ? 'liked' : ''}>
-                  {liked ? '좋아요 완료' : '좋아요'}
-                </button>
-                <span>{likes}개의 좋아요</span>
+            <div className="page-text">{page.content}</div>
+          </article>
+        ))}
+      </section>
+
+      <section className="footer-section">
+        <div className="footer-inner">
+          <div className="author-note">
+            <div className="author-avatar">
+              <img src={BOOK_DATA.authorNote.avatar} alt="Author" />
+            </div>
+            <h3>작가의 말</h3>
+            <p>“{BOOK_DATA.authorNote.text}”</p>
+            <p className="author-sign">김작가 올림</p>
+          </div>
+
+          <div className="interaction-panel">
+            <div className="congrats">
+              <h4>The End. 완독을 축하합니다.</h4>
+              <button
+                type="button"
+                className={`like-button ${hasLiked ? 'active' : ''}`}
+                onClick={handleLike}
+              >
+                <svg viewBox="0 0 24 24" fill={hasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                </svg>
+                <span>좋아요 {likes}</span>
+              </button>
+            </div>
+
+            <div>
+              <h5 className="comments-heading">Comments ({comments.length})</h5>
+              <div className="comments-list">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="comment-card">
+                    <div className="comment-name">{comment.name}</div>
+                    <div className="comment-text">{comment.text}</div>
+                  </div>
+                ))}
               </div>
               <form className="comment-form" onSubmit={handleCommentSubmit}>
-                <label htmlFor="comment">익명 댓글</label>
-                <textarea
-                  id="comment"
-                  value={commentText}
-                  onChange={(event) => setCommentText(event.target.value)}
-                  placeholder="이야기에 대한 감상을 남겨보세요."
-                  rows={4}
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="익명으로 여운을 나눠보세요..."
+                  className="comment-input"
+                  maxLength={60}
                 />
-                <button type="submit">댓글 남기기</button>
+                <button type="submit" className="comment-submit">남기기</button>
               </form>
-              <div className="comments-list">
-                {comments.length === 0 ? (
-                  <p className="empty-comments">아직 등록된 댓글이 없습니다.</p>
-                ) : (
-                  comments.map((text, index) => (
-                    <div key={index} className="comment-item">
-                      <span className="comment-badge">익명</span>
-                      <p>{text}</p>
-                    </div>
-                  ))
-                )}
-              </div>
             </div>
           </div>
-        </section>
-      )}
-    </main>
+        </div>
+      </section>
+    </div>
   );
 }
