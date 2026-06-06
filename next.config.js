@@ -1,11 +1,8 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === 'production';
-
 const nextConfig = {
   reactStrictMode: true,
-  output: 'export',
-  basePath: isProd ? '/old_knight' : '',
-  assetPrefix: isProd ? '/old_knight/' : '',
+  // Vercel 배포 시 output: 'export' 제거 (API Routes 사용하려면 서버 필요)
+  // GitHub Pages 대신 Vercel을 사용합니다
   images: {
     unoptimized: true,
   },

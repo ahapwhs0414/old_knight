@@ -2,12 +2,16 @@ import './globals.css';
 
 export const metadata = {
   title: '늙은 기사의 마지막 모험',
-  description: '늙은 기사의 이야기를 페이지 넘김과 함께 읽을 수 있는 Next.js 동화책',
+  description: '충직했던 늙은 기사의 마지막 여정을 담은 이야기',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body>{children}</body>
     </html>
   );
