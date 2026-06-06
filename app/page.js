@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import InteractionPanel from './components/InteractionPanel';
 
 const BASE = process.env.NODE_ENV === 'production' ? '/old_knight' : '';
 const img = (path) => `${BASE}${path}`;
@@ -97,7 +96,6 @@ export default function BookPage() {
 
           <div className="footer-inner-divider" />
 
-          <InteractionPanel />
 
           <p className="footer-end-line">늙은 기사의 마지막 모험 · {new Date().getFullYear()}</p>
         </footer>
