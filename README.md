@@ -38,6 +38,8 @@
 
 GitHub에 푸시하면 자동으로 `gh-pages` 브랜치에 배포되는 워크플로우가 실행됩니다.
 
+- 배포 URL: https://ahapwhs0414.github.io/old_knight
+
 1. 변경 사항 커밋
    ```bash
    git add .
