@@ -65,13 +65,13 @@ const BOOK_DATA = {
 
 export default function MobileScrollBook() {
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [likes, setLikes] = useState(128);
+  const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
-  const [comments, setComments] = useState([
-    { id: 1, name: '새벽의 사색가 402', text: '지하철에서 읽다가 울컥했네요. 감사합니다.' },
-    { id: 2, name: '푸른 연필 712', text: '여운이 길게 남는 작품이에요.' },
-  ]);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,42 +82,136 @@ export default function MobileScrollBook() {
       }
     };
 
+    async function loadFeedback() {
+      try {
+        const [likesRes, commentsRes] = await Promise.all([
+          fetch('/api/likes'),
+          fetch('/api/comments'),
+        ]);
+
+        if (likesRes.ok) {
+          const likesData = await likesRes.json();
+          setLikes(likesData.likes ?? 0);
+        }
+
+        if (commentsRes.ok) {
+          const commentsData = await commentsRes.json();
+          setComments(Array.isArray(commentsData.comments) ? commentsData.comments : []);
+        }
+      } catch (error) {
+        console.error('Feedback load failed', error);
+      }
+    }
+
     handleScroll();
     window.addEventListener('scroll', handleScroll);
+    loadFeedback();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLike = () => {
-    if (!hasLiked) {
-      setLikes(likes + 1);
-      setHasLiked(true);
-    } else {
-      setLikes(likes - 1);
-      setHasLiked(false);
+  const handleLike = async () => {
+    try {
+      const action = hasLiked ? 'unlike' : 'like';
+      const response = await fetch('/api/likes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setLikes(data.likes);
+        setHasLiked(!hasLiked);
+      }
+    } catch (error) {
+      console.error('Like update failed', error);
     }
   };
 
-  const handleCommentSubmit = (e) => {
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || isSubmitting) return;
 
-    const anonymousNames = ['익명의 독자', '밤하늘 나그네', '달빛 추적자', '종이비행기'];
-    const randomName = `${anonymousNames[Math.floor(Math.random() * anonymousNames.length)]} ${Math.floor(
-      Math.random() * 900
-    ) + 100}`;
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: newComment.trim() }),
+      });
 
-    setComments([...comments, { id: Date.now(), name: randomName, text: newComment.trim() }]);
-    setNewComment('');
+      if (response.ok) {
+        const comment = await response.json();
+        setComments((prev) => [...prev, comment]);
+        setNewComment('');
+      }
+    } catch (error) {
+      console.error('Comment submit failed', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const startEditing = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditingText(comment.text);
+  };
+
+  const cancelEditing = () => {
+    setEditingCommentId(null);
+    setEditingText('');
+  };
+
+  const saveCommentEdit = async (commentId) => {
+    if (!editingText.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: editingText.trim() }),
+      });
+
+      if (response.ok) {
+        const updatedComment = await response.json();
+        setComments((prev) => prev.map((item) => (item.id === commentId ? updatedComment : item)));
+        cancelEditing();
+      }
+    } catch (error) {
+      console.error('Comment edit failed', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+        if (editingCommentId === commentId) {
+          cancelEditing();
+        }
+      }
+    } catch (error) {
+      console.error('Comment delete failed', error);
+    }
   };
 
   return (
     <div className="mobile-scroll-book">
       <div className="sticky-bar">
-        <div className="top-row">
-          <span className="eyebrow">Reading Now</span>
-          <h1 className="sticky-title">{BOOK_DATA.title}</h1>
-        </div>
-        <div className="progress-track">
+          <div className="progress-track">
           <div className="progress-fill" style={{ width: `${scrollProgress}%` }} />
         </div>
       </div>
@@ -125,12 +219,6 @@ export default function MobileScrollBook() {
       <section className="cover-section">
         <div className="book-cover">
           <img src={BOOK_DATA.coverImage} alt="Cover" />
-        </div>
-        <h2>{BOOK_DATA.title}</h2>
-        <p className="cover-author">{BOOK_DATA.author} 지음</p>
-        <div className="cover-hint">
-          <span>위로 스크롤하여 읽기</span>
-          <span>↓</span>
         </div>
       </section>
 
@@ -173,7 +261,37 @@ export default function MobileScrollBook() {
                 {comments.map((comment) => (
                   <div key={comment.id} className="comment-card">
                     <div className="comment-name">{comment.name}</div>
-                    <div className="comment-text">{comment.text}</div>
+                    {editingCommentId === comment.id ? (
+                      <div className="comment-edit-area">
+                        <input
+                          type="text"
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          maxLength={120}
+                          className="comment-input"
+                        />
+                        <div className="comment-card-actions">
+                          <button type="button" onClick={() => saveCommentEdit(comment.id)} className="comment-action-button">
+                            저장
+                          </button>
+                          <button type="button" onClick={cancelEditing} className="comment-action-button">
+                            취소
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="comment-text">{comment.text}</div>
+                        <div className="comment-card-actions">
+                          <button type="button" onClick={() => startEditing(comment)} className="comment-action-button">
+                            수정
+                          </button>
+                          <button type="button" onClick={() => handleDeleteComment(comment.id)} className="comment-action-button">
+                            삭제
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
