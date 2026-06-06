@@ -364,16 +364,18 @@ body::before {
   font-size: 0.7rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #8a7a68;
+  color: #b0a090;  /* 기존 #8a7a68 → 밝게 */
   text-align: center;
   margin-bottom: 1rem;
 }
+
+
 
 .author-note-text {
   font-family: 'Nanum Myeongjo', serif;
   font-size: 0.96rem;
   line-height: 2.0;
-  color: #c0b0a0;
+  color: #e8d8c4;
   text-align: center;
   padding: 0 0.5rem;
   font-style: italic;
@@ -394,7 +396,7 @@ body::before {
   text-align: center;
   margin-top: 1.5rem;
   font-size: 0.85rem;
-  color: #7a6a58;
+  color: #a09080;  /* 기존 #7a6a58 → 밝게 */
   letter-spacing: 0.12em;
 }
 
