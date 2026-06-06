@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 const InteractionPanel = dynamic(() => import('./components/InteractionPanel'), { ssr: false });
 
-const BASE = process.env.NODE_ENV === 'production' ? '/old_knight' : '';
+const BASE = ' '
 const img = (path) => `${BASE}${path}`;
 
 const BOOK = {
@@ -80,29 +80,32 @@ export default function BookPage() {
           ))}
         </section>
 
-        <div className="chapter-divider" style={{ marginTop: '2rem' }}>
-          <div className="chapter-divider-line" />
-          <span className="chapter-divider-ornament">— 끝 —</span>
-          <div className="chapter-divider-line" />
-        </div>
+        {/* 챕터 끝 장식 */}
+<div className="chapter-divider" style={{ marginTop: '2rem' }}>
+  <div className="chapter-divider-line" />
+  <span className="chapter-divider-ornament">— 끝 —</span>
+  <div className="chapter-divider-line" />
+</div>
 
-        <footer className="footer-section">
-          <div className="author-block">
-            <div className="author-avatar-wrap">
-              <img src={img(BOOK.authorNote.avatar)} alt="작가" />
-            </div>
-            <p className="author-label">작가의 말</p>
-            <p className="author-note-text">{BOOK.authorNote.text}</p>
-            <p className="author-sign">— 권선우 올림</p>
-          </div>
+{/* 마지막 삽화 */}
+<div className="page-illustration" style={{ marginTop: '3rem' }}>
+  <img src="/images/end.jpeg" alt="마지막 삽화" />
+</div>
 
-          <div className="footer-inner-divider" />
+<footer className="footer-section">
+  <div className="author-block">
+    <div className="author-avatar-wrap" style={{ display: 'none' }}>
+      {/* end.jpeg는 위로 이동했으므로 숨김 */}
+    </div>
+    <p className="author-label">작가의 말</p>
+    <p className="author-note-text">{BOOK.authorNote.text}</p>
+    <p className="author-sign">— 권선우 올림</p>
+  </div>
 
+  <div className="footer-inner-divider" />
 
-          <p className="footer-end-line">늙은 기사의 마지막 모험 · {new Date().getFullYear()}</p>
-          {/* 좋아요 · 댓글 */}
-          <InteractionPanel />
-        </footer>
+  <p className="footer-end-line">늙은 기사의 마지막 모험 · {new Date().getFullYear()}</p>
+</footer>
       </div>
     </div>
   );
