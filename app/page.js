@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const BOOK_DATA = {
   title: '달빛 아래의 사색',
@@ -27,7 +27,7 @@ const BOOK_DATA = {
   },
 };
 
-export default function Page() {
+export default function MobileScrollBook() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [likes, setLikes] = useState(128);
   const [hasLiked, setHasLiked] = useState(false);
@@ -41,7 +41,8 @@ export default function Page() {
     const handleScroll = () => {
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
       if (totalHeight > 0) {
-        setScrollProgress((window.scrollY / totalHeight) * 100);
+        const progress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(progress);
       }
     };
 
@@ -52,25 +53,24 @@ export default function Page() {
 
   const handleLike = () => {
     if (!hasLiked) {
-      setLikes((prev) => prev + 1);
+      setLikes(likes + 1);
       setHasLiked(true);
     } else {
-      setLikes((prev) => Math.max(prev - 1, 0));
+      setLikes(likes - 1);
       setHasLiked(false);
     }
   };
 
-  const handleCommentSubmit = (event) => {
-    event.preventDefault();
+  const handleCommentSubmit = (e) => {
+    e.preventDefault();
     if (!newComment.trim()) return;
 
     const anonymousNames = ['익명의 독자', '밤하늘 나그네', '달빛 추적자', '종이비행기'];
-    const randomName = `${anonymousNames[Math.floor(Math.random() * anonymousNames.length)]} ${Math.floor(Math.random() * 900) + 100}`;
+    const randomName = `${anonymousNames[Math.floor(Math.random() * anonymousNames.length)]} ${Math.floor(
+      Math.random() * 900
+    ) + 100}`;
 
-    setComments((current) => [
-      ...current,
-      { id: Date.now(), name: randomName, text: newComment.trim() },
-    ]);
+    setComments([...comments, { id: Date.now(), name: randomName, text: newComment.trim() }]);
     setNewComment('');
   };
 
@@ -91,20 +91,20 @@ export default function Page() {
           <img src={BOOK_DATA.coverImage} alt="Cover" />
         </div>
         <h2>{BOOK_DATA.title}</h2>
-        <p>{BOOK_DATA.author} 지음</p>
+        <p className="cover-author">{BOOK_DATA.author} 지음</p>
         <div className="cover-hint">
           <span>위로 스크롤하여 읽기</span>
           <span>↓</span>
         </div>
       </section>
 
-      <section className="page-section">
+      <section className="pages-section">
         {BOOK_DATA.pages.map((page) => (
           <article key={page.id} className="page-card">
             <div className="page-illustration">
               <img src={page.illustration} alt={`illustration-${page.id}`} />
             </div>
-            <div className="page-text">{page.content}</div>
+            <div className="page-content">{page.content}</div>
           </article>
         ))}
       </section>
@@ -116,19 +116,15 @@ export default function Page() {
               <img src={BOOK_DATA.authorNote.avatar} alt="Author" />
             </div>
             <h3>작가의 말</h3>
-            <p>“{BOOK_DATA.authorNote.text}”</p>
+            <p className="author-text">“{BOOK_DATA.authorNote.text}”</p>
             <p className="author-sign">김작가 올림</p>
           </div>
 
           <div className="interaction-panel">
             <div className="congrats">
               <h4>The End. 완독을 축하합니다.</h4>
-              <button
-                type="button"
-                className={`like-button ${hasLiked ? 'active' : ''}`}
-                onClick={handleLike}
-              >
-                <svg viewBox="0 0 24 24" fill={hasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" xmlns="http://www.w3.org/2000/svg">
+              <button type="button" className={`like-button ${hasLiked ? 'active' : ''}`} onClick={handleLike}>
+                <svg viewBox="0 0 24 24" fill={hasLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={1.5} xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
                 <span>좋아요 {likes}</span>
@@ -145,6 +141,7 @@ export default function Page() {
                   </div>
                 ))}
               </div>
+
               <form className="comment-form" onSubmit={handleCommentSubmit}>
                 <input
                   type="text"
@@ -154,7 +151,9 @@ export default function Page() {
                   className="comment-input"
                   maxLength={60}
                 />
-                <button type="submit" className="comment-submit">남기기</button>
+                <button type="submit" className="comment-submit">
+                  남기기
+                </button>
               </form>
             </div>
           </div>
