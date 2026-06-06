@@ -1,0 +1,274 @@
+:root {
+  color-scheme: dark;
+  --paper: #f9f4ec;
+  --paper-soft: #faf5eb;
+  --text: #2c1f16;
+  --text-soft: #4e4033;
+  --accent: #8b5e3c;
+  --border: rgba(60, 40, 20, 0.12);
+  --shadow: 0 24px 80px rgba(34, 20, 10, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  background: linear-gradient(180deg, #f1ece4 0%, #f8f2e7 50%, #f4eae0 100%);
+  color: var(--text);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.22) 0%, transparent 18%),
+    radial-gradient(circle at 80% 10%, rgba(255,255,255,0.18) 0%, transparent 16%),
+    linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+}
+
+.hero {
+  min-height: 40vh;
+  display: grid;
+  place-items: center;
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+.hero-inner {
+  position: relative;
+  padding: 40px 28px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+  border-radius: 28px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.78rem;
+  margin: 0 0 14px;
+  color: #7f6a54;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  line-height: 1.02;
+}
+
+.subtitle {
+  margin: 18px auto 0;
+  max-width: 660px;
+  font-size: 1rem;
+  color: var(--text-soft);
+  line-height: 1.8;
+}
+
+.content {
+  display: grid;
+  gap: 36px;
+}
+
+.cover-section,
+.story-section,
+.author-note,
+.finale {
+  position: relative;
+}
+
+.cover-card,
+.note-card,
+.story-text {
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(249,244,236,0.98));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 28px;
+  padding: 32px;
+}
+
+.cover-card {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.96), rgba(246,238,227,0.98)),
+    repeating-linear-gradient(0deg, transparent 0, transparent 6px, rgba(94,64,39,0.02) 6px, rgba(94,64,39,0.02) 8px);
+}
+
+.cover-visual {
+  width: 100%;
+  min-height: 260px;
+  border-radius: 24px;
+  background: var(--paper) center/cover no-repeat;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.65);
+  margin-bottom: 24px;
+}
+
+.cover-start {
+  background-image: url("images/start.jpeg");
+}
+
+.cover-text {
+  width: 100%;
+}
+
+.cover-label {
+  color: #8b5e3c;
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+  margin-bottom: 14px;
+}
+
+.cover-title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.cover-author {
+  margin-top: 20px;
+  font-size: 1rem;
+  color: var(--text-soft);
+}
+
+.story-text {
+  line-height: 1.85;
+  font-size: 1.03rem;
+  letter-spacing: -0.02em;
+}
+
+.story-text p {
+  margin: 0 0 1.35em;
+}
+
+.scene-break {
+  margin: 28px auto;
+  width: 75px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(115, 84, 59, 0.8), transparent);
+  border-radius: 999px;
+}
+
+.note-card h2 {
+  margin-top: 0;
+  font-size: 1.65rem;
+}
+
+.note-card p {
+  margin: 0 0 1.1rem;
+  color: var(--text-soft);
+}
+
+.note-sign {
+  margin-top: 1.4rem;
+  font-weight: 700;
+  color: #6b4e3c;
+}
+
+.finale {
+  min-height: 40vh;
+  display: grid;
+  place-items: center;
+  background: #0d0d0d;
+  color: #f5f3f1;
+  border-radius: 30px;
+  padding: 48px 28px;
+}
+
+.finale-card {
+  width: 100%;
+  display: grid;
+  gap: 28px;
+}
+
+.final-visual {
+  width: 100%;
+  min-height: 260px;
+  border-radius: 24px;
+  background: var(--paper) center/cover no-repeat;
+  border: 1px solid rgba(255,255,255,0.18);
+  background-image: url("images/end.jpeg");
+}
+
+.finale::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 35%);
+  border-radius: 30px;
+  pointer-events: none;
+}
+
+.finale-text {
+  position: relative;
+  max-width: 680px;
+  text-align: center;
+}
+
+.finale-text p {
+  margin: 0 0 1.35rem;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+}
+
+.finale-signature {
+  margin-top: 1rem;
+  font-size: 0.98rem;
+  color: #d0c6bd;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 0 16px 40px;
+  }
+  .hero {
+    padding: 48px 0 32px;
+  }
+  .hero-inner {
+    padding: 28px;
+  }
+  .cover-card,
+  .note-card,
+  .story-text {
+    padding: 24px;
+  }
+  .story-text {
+    font-size: 1rem;
+  }
+  .finale {
+    padding: 32px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    animation: paperGlow 16s ease-in-out infinite;
+  }
+
+  @keyframes paperGlow {
+    0%, 100% { background-position: 0% 0%, 100% 100%; }
+    50% { background-position: 100% 100%, 0% 0%; }
+  }
+}
