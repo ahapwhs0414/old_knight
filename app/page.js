@@ -241,7 +241,7 @@ export default function MobileScrollBook() {
             </div>
             <h3>작가의 말</h3>
             <p className="author-text">“{BOOK_DATA.authorNote.text}”</p>
-            <p className="author-sign">김작가 올림</p>
+            <p className="author-sign">권선우 올림</p>
           </div>
 
           <div className="interaction-panel">
