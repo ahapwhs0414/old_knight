@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import dynamic from 'next/dynamic';
-const InteractionPanel = dynamic(() => import('./components/InteractionPanel'), { ssr: false });
+import InteractionPanel from './components/InteractionPanel';
 
 const BOOK = {
   title: '늙은 기사의 마지막 모험',
@@ -240,6 +239,20 @@ export default function BookPage() {
   const [animDir, setAnimDir] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // 슬라이드 목록이 확정되면 모든 이미지를 백그라운드 preload
+  useEffect(() => {
+    if (!slides) return;
+    slides.forEach((slide) => {
+      if (slide.type === 'story' && slide.page?.illustration) {
+        const img = new Image();
+        img.src = slide.page.illustration;
+      }
+    });
+    // 표지·엔딩 이미지도 preload
+    const extras = [BOOK.coverImage, '/images/end.jpeg'];
+    extras.forEach((src) => { const img = new Image(); img.src = src; });
+  }, [slides]);
+
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
 
@@ -300,7 +313,7 @@ export default function BookPage() {
   const currentSlide = slides[current];
 
   // 페이지 인디케이터: cover·author·interaction 제외한 순수 콘텐츠 슬라이드
-  const contentSlides = slides.filter(s => s.type === 'illustration' || s.type === 'text');
+  const contentSlides = slides.filter(s => s.type === 'story' || s.type === 'text');
   const contentIdx = contentSlides.indexOf(currentSlide);
   const showIndicator = contentIdx >= 0;
 
@@ -310,6 +323,8 @@ export default function BookPage() {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
+      {/* 인터랙션 패널을 미리 마운트해 Supabase 요청을 앞당김 */}
+      <HiddenWarmup />
       <div className={`slide-container${animDir ? ` anim-${animDir}` : ''}`}>
         <SlideRenderer slide={currentSlide} book={BOOK} />
       </div>
@@ -345,9 +360,12 @@ function SlideRenderer({ slide, book }) {
 
 /* ── 대화 줄바꿈 포매터 ── */
 function formatDialogue(text) {
-  return text
-    .replace(/([^"\n])\s*"/g, '$1\n"')
-    .replace(/"\s+/g, '"\n');
+  // 닫는따옴표 뒤에 오는 공백(+이후 텍스트)을 줄바꿈으로 대체
+  // "대화1" "대화2"  →  "대화1"
+"대화2"
+  // 기사가 말했다 "대화"  →  기사가 말했다 "대화"
+  (다음 줄로)
+  return text.replace(/"[ \t]+/g, '"\n');
 }
 
 /* ── 삽화 + 텍스트 슬라이드 (챕터 첫 페이지) ── */
@@ -360,7 +378,12 @@ function StorySlide({ slide }) {
     <div className="slide slide-story">
       <div className="story-inner">
         <div className="story-illustration">
-          <img src={page.illustration} alt={`챕터 ${page.id} 삽화`} />
+          <img
+            src={page.illustration}
+            alt={`챕터 ${page.id} 삽화`}
+            loading="eager"
+            decoding="async"
+          />
         </div>
         <div className="story-text-area">
           <div className="story-page-num">
@@ -399,7 +422,7 @@ function CoverSlide({ book }) {
   return (
     <div className="slide slide-cover">
       <div className="cover-book">
-        <img className="cover-img" src={book.coverImage} alt="표지" />
+        <img className="cover-img" src={book.coverImage} alt="표지" loading="eager" decoding="async" />
       </div>
       <p className="cover-tag">동화책</p>
       <h1 className="cover-title">{book.title}</h1>
@@ -435,6 +458,15 @@ function AuthorSlide({ book }) {
 function InteractionSlide() {
   return (
     <div className="slide slide-interaction">
+      <InteractionPanel />
+    </div>
+  );
+}
+
+/* ── 인터랙션 패널 warm-up: 항상 숨겨서 미리 마운트 ── */
+function HiddenWarmup() {
+  return (
+    <div style={{ position: 'fixed', visibility: 'hidden', pointerEvents: 'none', zIndex: -1, width: 0, height: 0, overflow: 'hidden' }}>
       <InteractionPanel />
     </div>
   );
