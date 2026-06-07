@@ -472,12 +472,12 @@ function useTextSplit(pages) {
 
       for (let i = 0; i < paragraphs.length; i++) {
         const candidate = [...current, paragraphs[i]];
-        measurer.textContent = candidate.join('\n\n');
+        measurer.textContent = candidate.join('\n');
         const h = measurer.getBoundingClientRect().height;
         const limit = isFirstChunk ? availableWithIllus : availableText;
 
         if (h > limit && current.length > 0) {
-          chunks.push(current.join('\n\n'));
+          chunks.push(current.join('\n'));
           current = [paragraphs[i]];
           isFirstChunk = false;
         } else {
@@ -654,8 +654,6 @@ function formatDialogue(text) {
   return text
     // 1) 닫는따옴표 뒤 공백: 줄바꿈으로 분리 ("..." "..." 패턴)
     .replace(/"[ \t]+"/g, '"\n"')
-    // 2) 닫는따옴표 뒤 일반 텍스트(서술): 줄바꿈으로 분리
-    .replace(/"[ \t]+([^"])/g, '"\n$1')
 }
 
 /* ── 삽화 + 텍스트 슬라이드 (챕터 첫 페이지) ── */
