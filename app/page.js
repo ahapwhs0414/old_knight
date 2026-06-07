@@ -464,31 +464,6 @@ function useTextSplit(pages) {
 
     const result = [];
 
-    pages.forEach((page) => {
-      const paragraphs = page.content.split('\n').filter((p) => p.trim() !== '');
-      const chunks = [];
-      let current = [];
-      let isFirstChunk = true;
-
-      for (let i = 0; i < paragraphs.length; i++) {
-        const candidate = [...current, paragraphs[i]];
-        measurer.textContent = candidate.join('\n\n');
-        const h = measurer.getBoundingClientRect().height;
-        const limit = isFirstChunk ? availableWithIllus : availableText;
-
-        if (h > limit && current.length > 0) {
-          chunks.push(current.join('\n\n'));
-          current = [paragraphs[i]];
-          isFirstChunk = false;
-        } else {
-          current = candidate;
-        }
-      }
-      if (current.length > 0) chunks.push(current.join('\n\n'));
-
-      result.push({ ...page, chunks });
-    });
-
     document.body.removeChild(probe);
     setSplitPages(result);
   }, []); // 마운트 시 1회
