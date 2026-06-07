@@ -503,3 +503,105 @@ body::before {
   background: var(--paper-dark);
   overflow: hidden;
 }
+
+/* ── 삽화 슬라이드 — 이미지 전체 보임 (contain) + 종이 배경 ── */
+.slide-illustration {
+  padding: 0;
+  overflow: hidden;
+  background: var(--paper-dark);
+}
+
+.illus-full-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 종이 질감 배경 */
+.illus-paper-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--paper-dark);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+.illus-full-img {
+  position: relative;
+  z-index: 1;
+  /* contain: 이미지 전체가 잘리지 않고 보임 */
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  /* 종이 위에 올려진 느낌의 그림자 */
+  filter: sepia(6%) contrast(1.04) brightness(0.96)
+          drop-shadow(0 4px 24px rgba(20, 12, 4, 0.22))
+          drop-shadow(0 1px 6px rgba(20, 12, 4, 0.12));
+  /* 이미지 주변 여백 */
+  padding: clamp(1.8rem, 5vw, 3rem) clamp(1.2rem, 4vw, 2rem) clamp(3.5rem, 8vw, 5rem);
+  box-sizing: border-box;
+}
+
+/* 챕터 번호 — 상단 왼쪽 */
+.illus-chapter-label {
+  position: absolute;
+  top: clamp(1rem, 3.5vw, 1.6rem);
+  left: clamp(1rem, 3.5vw, 1.6rem);
+  z-index: 2;
+}
+
+.illus-chapter-num {
+  font-family: 'Nanum Myeongjo', serif;
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+  font-weight: 800;
+  color: var(--ink-muted);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  opacity: 0.55;
+}
+
+/* 하단 '계속 읽기' 힌트 */
+.illus-hint {
+  position: absolute;
+  bottom: clamp(1rem, 4vw, 1.6rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  white-space: nowrap;
+  animation: floatHint 2s ease-in-out infinite;
+}
+
+.illus-hint-arrow {
+  font-size: 1.1rem;
+  line-height: 1;
+  animation: floatArrow 1.2s ease-in-out infinite;
+}
+
+/* ── 텍스트 전용 슬라이드 ── */
+.slide-text-only {
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.text-only-inner {
+  width: 100%;
+  height: 100%;
+  padding: 2rem clamp(1.2rem, 6vw, 2.5rem) 5rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-dark);
+  overflow: hidden;
+}
+
