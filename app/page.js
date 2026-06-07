@@ -1,112 +1,374 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 const InteractionPanel = dynamic(() => import('./components/InteractionPanel'), { ssr: false });
-
-const BASE = ' '
-const img = (path) => `${BASE}${path}`;
 
 const BOOK = {
   title: '늙은 기사의 마지막 모험',
   author: '권선우',
   coverImage: '/images/start.jpeg',
   pages: [
-    { id: 1, illustration: '/images/1.png', content: `왕국의 사람들은 모두 그를 알고 있었다. 그는 왕국에서 가장 오래된 기사였다. 어린 시절부터 검을 들었고, 늙어서는 왕과 여왕을 지켰다. 왕자가 태어났을 때는 밤새 곁을 지켰고, 공주가 처음 걸음마를 뗐을 때는 혹시 넘어질까 뒤를 따라다녔다.\n\n누군가는 그를 충직하다고 불렀고, 누군가는 우직하다고 불렀다. 하지만 그는 그런 말에 관심이 없었다. 그저 자신의 왕국과 가족을 지키는 것이 행복했다. 그러나 세상은 늘 변한다. 어느 날 왕은 그를 불렀다.\n\n"잠시만 여기서 기다려라." 왕의 목소리는 평소와 같았다. 기사는 고개를 끄덕였다. 왕은 마차에 올라탔고 떠나갔다. 기사는 기다렸다. 하루가 지나고 밤이 찾아왔다. 추위가 찾아왔다. 다음 날 아침이 밝아도 그는 움직이지 않았다. 왕이 기다리라고 했으니까. 둘째 날 저녁이 되었을 때, 기사는 결국 쓰러졌다.` },
-    { id: 2, illustration: '/images/2.png', content: `눈을 뜨자 낯선 하늘이 보였다. "정신이 드십니까?" 젊은 용병 하나가 물었다.\n\n기사는 몸을 일으키려 했지만 온몸이 무거웠다. "주근은 어디로 가셨지?" 용병은 잠시 침묵했다. "당신은 버려진 겁니다." 기사는 웃었다. "그럴 리 없네." "현실을 보세요." "그럴 리 없네."\n\n용병은 한숨을 쉬었다. "그럼 왜 아무도 안 돌아왔죠?" 기사는 대답하지 못했다. 하지만 떠나기 직전의 모습이 떠올랐다. 마차 창문 너머로 울고 있던 왕자. 그리고 공주. 그 아이들은 울고 있었다. 그렇다면 분명 이유가 있는 것이다. 그는 그렇게 믿었다. "난 돌아가야 하네."\n\n결국 용병이 포기했다. "내일 아침에 출발하세요." "고맙네." "그리고 조심하십시오… 밖은 괴물로 가득합니다."` },
-    { id: 3, illustration: '/images/3.png', content: `다음 날 새벽. 기사는 길을 떠났다. 그는 왕국이 있는 방향을 모른다. 지도도 없다. 단지 느낌만 있었다. 그러나 이상하게도 그것만으로 충분했다.\n\n얼마나 걸었을까, 멀리서 굉음이 들려왔다. 곧 검은 형체들이 번개처럼 지나갔다. 너무 빨라 형태조차 보이지 않았다. 기사는 이를 악물고 뛰었다. 그 순간, 엄청난 속도의 괴물 하나가 눈앞까지 다가왔다. 기사는 죽음을 직감했다. 하지만 괴물은 갑자기 방향을 틀어 그를 피해갔다. 그리고 안에서 누군가 중얼거렸다. "불쌍한 놈…"\n\n기사는 그제야 괴물의 모습을 보았다. 그것은 마차였다. 귀족들이 타는 화려한 마차. 자신을 버리고 떠났던 바로 그 마차.` },
-    { id: 4, illustration: '/images/4.png', content: `배고픔이 찾아오기 시작했다. 처음에는 참을 만했다. 하지만 시간이 지날수록 견디기 어려워졌다.\n\n그때 무장한 용병들이 나타났다. 그들은 기사를 발견하자마자 무기를 들었다. "멈춰!" 기사는 손을 들었다. "싸우고 싶지 않네." 하지만 그들은 듣지 않았다. 결국 그는 검을 휘둘렀다. 용병들이 쓰러졌다.\n\n전투가 끝났을 때. 기사는 무릎을 꿇었다. 배가 고팠다. 너무 고팠다. 목도 말랐다. 정신이 흐려졌다. 안 된다는 것을 안다. 절대 해서는 안 된다는 것도 안다. 하지만 본능은 이성을 삼켜 버렸다.\n\n그날 밤. 늙은 기사는 처음으로 금기를 깨뜨렸다.` },
-    { id: 5, illustration: '/images/5.png', content: `이후로도 그는 계속 걸었다. 몸은 점점 망가졌다. 털은 엉켰고, 피는 말라붙었다. 눈은 충혈되었다. 하지만 그는 멈추지 않았다.\n\n어느 날 다시 마차들이 보였다. 이번에는 수십 대였다. 그리고 많은 귀족들이 길을 걷고 있었다. 기사는 안도했다. '이제 가까운 것이다.'\n\n그러나 귀족들의 반응은 이상했다. "저리 가!" "괴물이다!" "살려줘!" 그들은 비명을 질렀다. 기사는 입가를 닦았다. 손에 피가 묻어 나왔다. 그는 아무 말도 하지 않았다. 그저 더 빨리 앞으로 달렸다.` },
-    { id: 6, illustration: '/images/6.png', content: `마침내 익숙한 풍경이 나타났다. 왕자와 공주를 경호하며 걸었던 길. 꽃밭. 분수. 작은 언덕. 그는 눈물을 흘렸다. 돌아왔다. 정말 돌아왔다.\n\n하지만 기쁨은 오래가지 않았다. 경비대가 길을 막았다. "비켜주게." 기사가 말했다. "난 왕자님을 만나야 하네." 그러나 경비대는 무기를 겨눴다. 그는 싸우지 않았다. 그저 달아났다.\n\n도망치던 중 익숙한 얼굴을 발견했다. 여기사는 당황한 표정으로 그를 바라봤다. "대체 무슨 일이 있었던 겁니까?" 하지만 귀족이 소리쳤다. "가까이 가지 마!" 여기사는 끝내 뒤돌아 달아났다.\n\n그 순간. 기사는 처음으로 절망했다. 그러나 포기하지 않았다. 왕자님과 공주님만 만나면 된다.` },
-    { id: 7, illustration: '/images/7.png', content: `해가 질 무렵. 드디어 왕국이 보였다. 기사는 울면서 달렸다. 그러나 성문은 열리지 않았다. 그는 계속 두드렸다. 소리쳤다. 애원했다. 하지만 아무도 열어주지 않았다.\n\n그리고 성벽 위. 왕이 있었다. 왕자도 있었다. 공주도 있었다. 왕자와 공주는 금방이라도 뛰어내릴 것처럼 울고 있었다. 그러나 왕이 그들을 붙잡았다.\n\n기사는 계속 외쳤다. 목이 터져라 외쳤다. 하지만 점점 졸음이 밀려왔다. 다리가 풀리고 시야가 흐려졌다.` },
-    { id: 8, illustration: '/images/8.png', content: `눈을 떴을 때. 놀랍게도 왕과 왕자, 공주가 보였다. 기사는 웃었다. 드디어 돌아왔다. 몸을 일으키려 했다. 그러나 움직일 수 없었다. 양팔과 다리가 묶여 있었다.\n\n그는 웃었다. '분명 치료 때문일 것이다. 왕자님이 곧 풀어줄 것이다.'\n\n의사가 주사기를 준비했다. 왕자는 흐느끼며 다가왔다. 그리고 떨리는 손으로 그의 머리를 쓰다듬었다. "미안해…" 왕자의 눈물이 떨어졌다. "정말 미안해…"\n\n"난 너를 버리고 싶지 않았어…" 왕자의 목소리가 무너졌다. "그런데 아빠가… 네가 혹시라도 사람을 먹었다면 죽여야 한대…" "나라의 법이 그렇대…"\n\n주사가 천천히 들어왔다. 시야가 흐려졌다. 왕자의 얼굴도. 공주의 얼굴도. 점점 멀어졌다.\n\n"미안해…" "내가 너의 주인이어서 미안해…" 왕자는 끝없이 울며 그의 머리를 안았다. "다음 생에는 꼭 개가 아니라 인간으로 태어나서…" 마지막까지 충직했던 늙은 기사는 조용히 눈을 감았다. "나랑 친하게 지내자." "사랑해."` },
+    {
+      id: 1, illustration: '/images/1.png',
+      content: `왕국의 사람들은 모두 그를 알고 있었다. 그는 왕국에서 가장 오래된 기사였다. 어린 시절부터 검을 들었고, 늙어서는 왕과 여왕을 지켰다. 왕자가 태어났을 때는 밤새 곁을 지켰고, 공주가 처음 걸음마를 뗐을 때는 혹시 넘어질까 뒤를 따라다녔다.
+
+누군가는 그를 충직하다고 불렀고, 누군가는 우직하다고 불렀다. 하지만 그는 그런 말에 관심이 없었다. 그저 자신의 왕국과 가족을 지키는 것이 행복했다. 그러나 세상은 늘 변한다. 어느 날 왕은 그를 불렀다.
+
+"잠시만 여기서 기다려라." 왕의 목소리는 평소와 같았다. 기사는 고개를 끄덕였다. 왕은 마차에 올라탔고 떠나갔다. 기사는 기다렸다. 하루가 지나고 밤이 찾아왔다. 추위가 찾아왔다. 다음 날 아침이 밝아도 그는 움직이지 않았다. 왕이 기다리라고 했으니까. 둘째 날 저녁이 되었을 때, 기사는 결국 쓰러졌다.`,
+    },
+    {
+      id: 2, illustration: '/images/2.png',
+      content: `눈을 뜨자 낯선 하늘이 보였다. "정신이 드십니까?" 젊은 용병 하나가 물었다.
+
+그는 낡은 갑옷 대신 거친 털가죽 같은 외투를 몸에 두르고 있었다. 얼굴에는 오래된 상처 자국이 여러 개 남아 있었고, 귀 가장자리는 군데군데 찢어져 있었다. 야영지 주변에는 비슷한 차림의 용병들이 흩어져 누워 있었다.
+
+기사는 몸을 일으키려 했지만 온몸이 무거웠다. "주군은 어디로 가셨지?" 용병은 잠시 침묵했다. "당신은 버려진 겁니다." 기사는 웃었다. "그럴 리 없네." "현실을 보세요." "그럴 리 없네."
+
+용병은 한숨을 쉬었다. "그럼 왜 아무도 안 돌아왔죠?" 기사는 대답하지 못했다. 하지만 떠나기 직전의 모습이 떠올랐다. 마차 창문 너머로 울고 있던 왕자. 그리고 공주. 그 아이들은 울고 있었다. 그렇다면 분명 이유가 있는 것이다. 그는 그렇게 믿었다. "난 돌아가야 하네."
+
+용병이 미간을 찌푸렸다. "어디로요?" "왕국으로." "어디 있는지는 압니까?" 기사는 잠시 생각했다. "느껴진다네." 용병은 황당하다는 듯 웃었다. 그러나 결국 포기했다. "내일 아침에 출발하세요." "고맙네." "그리고 조심하십시오… 밖은 괴물로 가득합니다."`,
+    },
+    {
+      id: 3, illustration: '/images/3.png',
+      content: `다음 날 새벽. 기사는 길을 떠났다. 그는 왕국이 있는 방향을 모른다. 지도도 없다. 단지 느낌만 있었다. 그러나 이상하게도 그것만으로 충분했다.
+
+얼마나 걸었을까, 멀리서 굉음이 들려왔다. 곧 검은 형체들이 번개처럼 지나갔다. 너무 빨라 형태조차 보이지 않았다. 기사는 이를 악물고 뛰었다. 그 순간, 엄청난 속도의 괴물 하나가 눈앞까지 다가왔다. 기사는 죽음을 직감했다. 하지만 괴물은 갑자기 방향을 틀어 그를 피해갔다. 그리고 안에서 누군가 중얼거렸다. "불쌍한 놈…"
+
+기사는 그제야 괴물의 모습을 보았다. 그것은 거대한 쇳덩이였다. 네 개의 둥근 발을 쉼 없이 굴리며 길 위를 미끄러지듯 달리고 있었다. 앞쪽에는 투명한 방패가 달려 있었고, 그 안에서는 귀족들이 편안한 의자에 앉아 있었다. 그것은 귀족들이 타는 화려한 마차였다. 심지어 자신도 타 본 적 있는. 자신을 버리고 떠났던 바로 그 마차.`,
+    },
+    {
+      id: 4, illustration: '/images/4.png',
+      content: `기사의 눈앞에 끝이 보이지 않을 만큼 넓은 강이 나타났다. 평생 왕국 안에서만 살아온 그는 이런 강을 본 적이 없었다. 한참 동안 강을 바라보았다. 햇빛이 물 위에서 반짝였다. 이상하게도 조금 아름답다고 생각했다.
+
+기사는 조심스럽게 발을 내밀었다. 차가운 물이 발끝을 감쌌다. 깜짝 놀라 발을 뺐다. 한참 동안 망설였다. 그러나 결국 다시 앞으로 나아갔다. 왕국으로 가야 했으니까.
+
+물이 다리까지 차올랐다. 배까지 잠겼다. 몸이 무거워졌다. 그리고 마침내 발이 땅에 닿지 않았다. 순간 놀랐다. 하지만 이상한 일이 일어났다. 몸이 저절로 움직였다. 손이 물을 밀어냈다. 발도 자연스럽게 움직였다. 누가 가르쳐 준 적도 없는데. 태어나 처음 하는 일인데. 몸은 이미 알고 있었다.
+
+기사는 정신없이 물을 헤쳤다. 얼마나 지났을까. 정신을 차려 보니 강 건너편이었다. 기사는 젖은 몸을 털었다. 그리고 다시 길을 걸었다.`,
+    },
+    {
+      id: 5, illustration: '/images/5.png',
+      content: `배고픔이 찾아오기 시작했다. 처음에는 참을 만했다. 하지만 시간이 지날수록 견디기 어려워졌다.
+
+그때 무장한 용병들이 나타났다. 그들은 모두 제각기 다른 갑옷을 걸치고 있었지만 어딘가 비슷한 분위기를 풍겼다. 몸에는 오래된 상처가 많았고, 털은 거칠고 엉켜 있었다. 그들은 기사를 발견하자마자 무기를 들었다. "멈춰!" 기사는 손을 들었다. "싸우고 싶지 않네." 하지만 그들은 듣지 않았다. 결국 그는 검을 휘둘렀다. 용병들이 쓰러졌다.
+
+전투가 끝났을 때. 기사는 무릎을 꿇었다. 배가 고팠다. 너무 고팠다. 목도 말랐다. 정신이 흐려졌다. 안 된다는 것을 안다. 절대 해서는 안 된다는 것도 안다. 하지만 본능은 이성을 삼켜 버렸다.
+
+그날 밤. 늙은 기사는 처음으로 금기를 깨뜨렸다.`,
+    },
+    {
+      id: 6, illustration: '/images/6.png',
+      content: `늙은 기사는 걷고 또 걸었다. 다리는 무거웠다. 숨도 거칠어졌다. 마침내 더는 버티지 못하고 주저앉으려던 순간. 저 앞에 누군가 서 있는 것이 보였다.
+
+낡은 갑옷. 수많은 상처. 거칠게 엉킨 털. 그 역시 기사였다. 아니. 한때 기사였던 존재였다.
+
+그가 먼저 입을 열었다. "당신도 버려진 겁니까?" "아니네." 늙은 기사는 고개를 저었다. "주군에게 무슨 일이 생긴 걸세. 그래서 돌아가야 하네." 상대는 씁쓸하게 웃었다. "저도 그렇게 생각했습니다." 잠시 침묵이 흘렀다. "그래서 돌아갔습니다."
+
+"그리고?" "아무도 기뻐하지 않더군요." 그의 목소리는 차분했다. 오히려 너무 차분해서 더 슬펐다. "마치 버린 것이 다시 돌아온 것처럼."
+
+"그럴 리 없네." 늙은 기사가 중얼거렸다. "난 돌아가야 하네." 상대는 더 이상 설득하지 않았다. 그저 조용히 말했다. "한 가지만 기억하십시오. 귀족은 절대 공격하지 마십시오." 그 말을 남긴 채. 그는 숲속으로 사라졌다.
+
+늙은 기사는 한참 동안 그 자리에 서 있었다. 하지만 결국 다시 걸었다. 밤마다 자신의 곁에 와 잠들던 왕자가 떠올랐다. 작은 손으로 목을 끌어안고 잠들던 아이. 그 기억 하나만으로도 충분했다.`,
+    },
+    {
+      id: 7, illustration: '/images/7.png',
+      content: `이후로도 그는 계속 걸었다. 몸은 점점 망가졌다. 털은 엉켰고, 피는 말라붙었다. 눈은 충혈되었다. 하지만 그는 멈추지 않았다.
+
+어느 날 다시 마차들이 보였다. 이번에는 수십 대였다. 그리고 많은 귀족들이 길을 걷고 있었다. 기사는 안도했다. '이제 가까운 것이다.'
+
+그러나 귀족들의 반응은 이상했다. "저리 가!" "괴물이다!" "살려줘!" 그들은 비명을 질렀다. 기사는 입가를 닦았다. 손에 피가 묻어 나왔다. 그는 아무 말도 하지 않았다. 그저 더 빨리 앞으로 달렸다.`,
+    },
+    {
+      id: 8, illustration: '/images/8.png',
+      content: `마침내 익숙한 풍경이 나타났다. 왕자와 공주를 경호하며 걸었던 길. 꽃밭. 분수. 작은 언덕. 그는 눈물을 흘렸다. 돌아왔다. 정말 돌아왔다.
+
+하지만 기쁨은 오래가지 않았다. 경비대는 일정한 간격으로 서서 길을 통제하고 있었다. 허리에서는 작은 상자가 계속 소리를 내고 있었다. "비켜주게." 기사가 말했다. "난 왕자님을 만나야 하네." 그러나 경비대는 무기를 겨눴다. 그는 싸우지 않았다. 그저 달아났다.
+
+그리고 도망치던 중 익숙한 얼굴을 발견했다. 여기사는 당황한 표정으로 그를 바라봤다. "대체 무슨 일이 있었던 겁니까?" 하지만 귀족이 소리쳤다. "가까이 가지 마!" 여기사는 끝내 뒤돌아 달아났다.
+
+그 순간. 기사는 처음으로 절망했다. 그러나 포기하지 않았다. 왕자님과 공주님만 만나면 된다.`,
+    },
+    {
+      id: 9, illustration: '/images/9.png',
+      content: `기사는 결국 경비대에게 포위되었다. 그들은 천천히 다가왔다. 무기를 들고 있었다. 하지만 얼굴에는 적의가 없었다. 두려움이 있었다. 그리고 경계심이 있었다.
+
+"괜찮습니다." 한 사람이 말했다. "가만히 계십시오. 우리가 도와드리겠습니다." 기사는 뒷걸음질쳤다. "안 됩니다. 난 왕자님을 만나야 하네." "진정하십시오." "더 다가오지 마십시오." 그의 목소리가 떨렸다. "정말 공격하고 싶지 않습니다."
+
+하지만 경비대는 계속 다가왔다. 오래된 본능이 움직였다. 수백 번. 수천 번 반복했던 동작. 검이 번개처럼 휘둘러졌다. 비명이 터졌다. 경비 한 명이 쓰러졌다. 붉은 피가 흘렀다.
+
+기사는 얼어붙었다. 그는 원하지 않았다. 정말 원하지 않았다. 하지만 이미 늦었다. 다른 경비들은 더 이상 쫓아오지 않았다. 멀리서 날카로운 경종 소리가 울려 퍼졌다. 기사는 뒤를 돌아보지 않았다. 그저 앞으로 달렸다. 오직 왕자님 한 사람에게 돌아가기 위해.`,
+    },
+    {
+      id: 10, illustration: '/images/10.png',
+      content: `해가 질 무렵. 드디어 왕국이 보였다. 기사는 울면서 달렸다. 그러나 성문은 열리지 않았다. 그는 계속 두드렸다. 소리쳤다. 애원했다. 하지만 아무도 열어주지 않았다.
+
+그리고 성벽 위. 왕이 있었다. 왕자도 있었다. 공주도 있었다. 왕자와 공주는 금방이라도 뛰어내릴 것처럼 울고 있었다. 그러나 왕이 그들을 붙잡았다.
+
+기사는 계속 외쳤다. 목이 터져라 외쳤다. 하지만 점점 졸음이 밀려왔다. 다리가 풀리고 시야가 흐려졌다.`,
+    },
+    {
+      id: 11, illustration: '/images/11.png',
+      content: `눈을 떴을 때. 놀랍게도 왕자가 보였다. 기사는 웃었다. 드디어 돌아왔다. 몸을 일으키려 했다. 그러나 움직일 수 없었다. 양팔과 다리가 묶여 있었다.
+
+그는 웃었다. '분명 치료 때문일 것이다. 왕자님이 곧 풀어줄 것이다.'
+
+의사가 주사기를 준비했다. 왕자는 흐느끼며 다가왔다. 그리고 떨리는 손으로 그의 머리를 쓰다듬었다. "미안해…" 왕자의 눈물이 떨어졌다. "정말 미안해…"
+
+"난 너를 버리고 싶지 않았어…" 왕자의 목소리가 무너졌다. "그런데 아빠가… 네가 혹시라도 사람을 먹었다면 죽여야 한대…" "나라의 법이 그렇대…"
+
+"너가 그럴 리 없다는 거 아는데…" 왕자의 손이 떨렸다. "너 입에 묻은 건 동물 피잖아…" 눈물이 그의 털 위로 떨어졌다.
+
+주사가 천천히 들어왔다. 시야가 흐려졌다. 왕자의 얼굴도. 공주의 얼굴도. 점점 멀어졌다.
+
+"미안해…" "내가 너의 주인이어서 미안해…" 왕자는 끝없이 울며 그의 머리를 안았다. "다음 생에는 꼭 개가 아니라 인간으로 태어나서…" 마지막까지 충직했던 늙은 기사는 조용히 눈을 감았다. "나랑 친하게 지내자." "사랑해."`,
+    },
   ],
   authorNote: {
-    avatar: '/images/end.jpeg',
-    text: '먼저 이 책을 읽어 주신 모든 분들께 감사의 말씀을 드립니다. 그리고 한편으로는 작은 사과를 전하고 싶습니다. 이 책은 일반적인 문체와 달리, 하나의 긴 문장으로 이어질 수 있는 내용들을 짧게 나누어 표현했습니다. 제가 이러한 방식을 선택한 이유는 이 이야기를 사람이 아닌 개의 시선에서 그리고 싶었기 때문입니다. 부족한 글이지만 끝까지 함께해 주셔서 진심으로 감사합니다.',
-     coverImage: '/images/end.jpeg',
+    text: '먼저 이 책을 읽어 주신 모든 분들께 감사의 말씀을 드립니다. 그리고 한편으로는 작은 사과를 전하고 싶습니다. 이 책은 일반적인 문체와 달리, 하나의 긴 문장으로 이어질 수 있는 내용들을 짧게 나누어 표현했습니다. 그래서 읽는 동안 다소 어색하거나 불편하게 느끼신 분들도 계셨을 것이라 생각합니다.\n\n제가 이러한 방식을 선택한 이유는 이 이야기를 \'사람\'이 아닌 \'개\'의 시선에서 그리고 싶었기 때문입니다. 사람보다 단순하게 세상을 바라보고, 생각도 조금씩 이어 나가는 존재라면 이야기를 어떻게 받아들이고 표현할지 상상해 보았습니다. 그래서 이야기의 내용뿐만 아니라 문장의 구조와 흐름에도 그 시선을 담고자 했습니다.\n\n부족한 글이지만 끝까지 함께해 주셔서 진심으로 감사합니다.',
   },
 };
 
+const TOTAL = 1 + BOOK.pages.length + 1 + 1; // 14
+
 export default function BookPage() {
-  const [progress, setProgress] = useState(0);
+  const [current, setCurrent] = useState(0);
+  const [animDir, setAnimDir] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  // 표지→1페이지 전환 중 상태
+  const [coverFlipping, setCoverFlipping] = useState(false);
+  const [coverFlipped, setCoverFlipped] = useState(false);
+
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
+
+  const goTo = useCallback((next) => {
+    if (isAnimating || coverFlipping) return;
+    if (next < 0 || next >= TOTAL) return;
+
+    // 표지 → 1페이지: 책 넘기기 애니메이션
+    if (current === 0 && next === 1) {
+      setCoverFlipping(true);
+      setTimeout(() => {
+        setCoverFlipped(true);
+      }, 50);
+      setTimeout(() => {
+        setCurrent(1);
+        setCoverFlipping(false);
+        setCoverFlipped(false);
+      }, 900);
+      return;
+    }
+
+    // 1페이지 → 표지: 역방향 넘기기
+    if (current === 1 && next === 0) {
+      setCoverFlipping(true);
+      setCoverFlipped(true);
+      setTimeout(() => {
+        setCoverFlipped(false);
+      }, 50);
+      setTimeout(() => {
+        setCurrent(0);
+        setCoverFlipping(false);
+        setCoverFlipped(false);
+      }, 900);
+      return;
+    }
+
+    const dir = next > current ? 'left' : 'right';
+    setAnimDir(dir);
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrent(next);
+      setAnimDir(null);
+      setIsAnimating(false);
+    }, 380);
+  }, [current, isAnimating, coverFlipping]);
+
+  const goNext = useCallback(() => goTo(current + 1), [current, goTo]);
+  const goPrev = useCallback(() => goTo(current - 1), [current, goTo]);
 
   useEffect(() => {
-    const onScroll = () => {
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      if (total > 0) setProgress((window.scrollY / total) * 100);
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [goNext, goPrev]);
+
+  const onTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      if (dx < 0) goNext();
+      else goPrev();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  // 표지 전환 애니메이션 중일 때 렌더
+  if (coverFlipping) {
+    return (
+      <div
+        className="book-root"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <CoverFlipScene
+          book={BOOK}
+          flipped={coverFlipped}
+          firstPage={BOOK.pages[0]}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="book-root">
-      <div className="progress-bar-wrap">
-        <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
+    <div
+      className="book-root"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      <div className={`slide-container${animDir ? ` anim-${animDir}` : ''}`}>
+        <SlideRenderer current={current} book={BOOK} />
       </div>
 
-      <div className="book-wrapper">
-        <section className="cover-section">
-          <div className="cover-book">
-            <img className="cover-img" src={img(BOOK.coverImage)} alt="표지" />
-          </div>
-          <p className="cover-tag">동화책</p>
-          <h1 className="cover-title">{BOOK.title}</h1>
-          <p className="cover-author">글 · {BOOK.author}</p>
-          <div className="scroll-hint">
-            <span>아래로 스크롤</span>
-            <div className="scroll-hint-arrow" />
-          </div>
-        </section>
+      {current > 0 && (
+        <button className="nav-btn nav-prev" onClick={goPrev} aria-label="이전 페이지">‹</button>
+      )}
+      {current < TOTAL - 1 && (
+        <button className="nav-btn nav-next" onClick={goNext} aria-label="다음 페이지">›</button>
+      )}
 
-        <div className="chapter-divider">
-          <div className="chapter-divider-line" />
-          <span className="chapter-divider-ornament">✦ ✦ ✦</span>
-          <div className="chapter-divider-line" />
+      {current > 0 && current < TOTAL - 1 && (
+        <div className="page-indicator">{current} / {TOTAL - 2}</div>
+      )}
+    </div>
+  );
+}
+
+/* ── 책 넘기기 3D 씬 ── */
+function CoverFlipScene({ book, flipped, firstPage }) {
+  return (
+    <div className="flip-scene">
+      {/* 배경: 첫 페이지가 뒤에 깔려 있음 */}
+      <div className="flip-back-page">
+        <div className="flip-back-illustration">
+          <img src={firstPage.illustration} alt="1페이지 삽화" />
+        </div>
+        <div className="flip-back-text">
+          <div className="story-page-num">페이지 1</div>
+          <div className="story-content first-page">{firstPage.content}</div>
+        </div>
+      </div>
+
+      {/* 3D 책 컨테이너 - perspective */}
+      <div className="flip-book-wrap">
+        {/* 책 왼쪽 절반 (spine 쪽, 고정) */}
+        <div className="flip-book-left">
+          <div className="flip-spine" />
+          <div className="flip-left-cover">
+            <img src={book.coverImage} alt="표지" />
+            {/* 왼쪽 절반 표지 이미지 — clip */}
+          </div>
         </div>
 
-        <section className="pages-section">
-          {BOOK.pages.map((page, idx) => (
-            <article key={page.id} className="page-card">
-              <div className="page-illustration">
-                <img src={img(page.illustration)} alt={`${idx + 1}페이지 삽화`} />
-              </div>
-              <div className="page-num">페이지 {page.id}</div>
-              <div className={`page-content${idx === 0 ? ' first-page' : ''}`}>
-                {page.content}
-              </div>
-            </article>
-          ))}
-        </section>
-
-        {/* 챕터 끝 장식 */}
-<div className="chapter-divider" style={{ marginTop: '2rem' }}>
-  <div className="chapter-divider-line" />
-  <span className="chapter-divider-ornament">— 끝 —</span>
-  <div className="chapter-divider-line" />
-</div>
-
-{/* 마지막 삽화 */}
-<div className="page-illustration" style={{ marginTop: '3rem' }}>
-  <img src="/images/end.jpeg" alt="마지막 삽화" />
-</div>
-
-<footer className="footer-section">
-  <div className="author-block">
-    <div className="author-avatar-wrap" style={{ display: 'none' }}>
-      {/* end.jpeg는 위로 이동했으므로 숨김 */}
-    </div>
-    <p className="author-label">작가의 말</p>
-    <p className="author-note-text">{BOOK.authorNote.text}</p>
-    <p className="author-sign">— 권선우 올림</p>
-  </div>
-
-  <div className="footer-inner-divider" />
-
-  <p className="footer-end-line">늙은 기사의 마지막 모험 · {new Date().getFullYear()}</p>
-</footer>
+        {/* 페이지가 넘어가는 오른쪽 절반 */}
+        <div className={`flip-page-wrap${flipped ? ' flipped' : ''}`}>
+          {/* 앞면: 표지 오른쪽 */}
+          <div className="flip-page-front">
+            <img src={book.coverImage} alt="표지" />
+            <div className="flip-page-sheen" />
+          </div>
+          {/* 뒷면: 첫 페이지 왼쪽 절반 */}
+          <div className="flip-page-back">
+            <div className="flip-page-back-inner">
+              <p className="flip-back-page-num">페이지 1</p>
+              <p className="flip-back-preview">{firstPage.content.slice(0, 80)}…</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* 그림자 */}
+      <div className={`flip-shadow${flipped ? ' shadow-spread' : ''}`} />
+    </div>
+  );
+}
+
+function SlideRenderer({ current, book }) {
+  if (current === 0) return <CoverSlide book={book} />;
+  if (current >= 1 && current <= book.pages.length)
+    return <StorySlide page={book.pages[current - 1]} pageNum={current} />;
+  if (current === book.pages.length + 1) return <AuthorSlide book={book} />;
+  if (current === book.pages.length + 2) return <InteractionSlide />;
+  return null;
+}
+
+function CoverSlide({ book }) {
+  return (
+    <div className="slide slide-cover">
+      <div className="cover-book">
+        <img className="cover-img" src={book.coverImage} alt="표지" />
+      </div>
+      <p className="cover-tag">동화책</p>
+      <h1 className="cover-title">{book.title}</h1>
+      <p className="cover-author">글 · {book.author}</p>
+      <div className="swipe-hint">
+        <span>오른쪽으로 스와이프</span>
+        <div className="swipe-arrow">›</div>
+      </div>
+    </div>
+  );
+}
+
+function StorySlide({ page, pageNum }) {
+  return (
+    <div className="slide slide-story">
+      <div className="story-inner">
+        <div className="story-illustration">
+          <img src={page.illustration} alt={`${pageNum}페이지 삽화`} />
+        </div>
+        <div className="story-text-area">
+          <div className="story-page-num">페이지 {pageNum}</div>
+          <div className={`story-content${pageNum === 1 ? ' first-page' : ''}`}>
+            {page.content}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AuthorSlide({ book }) {
+  return (
+    <div className="slide slide-author">
+      <div className="author-inner">
+        <div className="author-end-img">
+          <img src="/images/end.jpeg" alt="마지막 삽화" />
+        </div>
+        <div className="author-text-block">
+          <div className="chapter-orn">— 끝 —</div>
+          <p className="author-label">작가의 말</p>
+          <p className="author-note-text">{book.authorNote.text}</p>
+          <p className="author-sign">— 권선우 올림</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InteractionSlide() {
+  return (
+    <div className="slide slide-interaction">
+      <InteractionPanel />
     </div>
   );
 }
