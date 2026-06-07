@@ -364,7 +364,6 @@ function formatDialogue(text) {
   // "대화1" "대화2"  →  "대화1"
 "대화2"
   // 기사가 말했다 "대화"  →  기사가 말했다 "대화"
-  (다음 줄로)
   return text.replace(/"[ \t]+/g, '"\n');
 }
 
