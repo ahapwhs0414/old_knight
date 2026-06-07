@@ -652,6 +652,13 @@ function SlideRenderer({ slide, book }) {
   }
 }
 
+/* ── 대화 줄바꿈 포매터 ── */
+function formatDialogue(text) {
+  return text
+    // 1) 닫는따옴표 뒤 공백: 줄바꿈으로 분리 ("..." "..." 패턴)
+    .replace(/"[ \t]+"/g, '"\n"')
+}
+
 /* ── 삽화 + 텍스트 슬라이드 (챕터 첫 페이지) ── */
 function StorySlide({ slide }) {
   const { page, chunk, totalChunks } = slide;
