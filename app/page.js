@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 const InteractionPanel = dynamic(() => import('./components/InteractionPanel'), { ssr: false });
 
@@ -129,29 +129,130 @@ const BOOK = {
   },
 };
 
-const TOTAL = 1 + BOOK.pages.length + 1 + 1; // 14
+// ── 텍스트를 화면 높이에 맞게 문단 단위로 분할하는 훅 ──
+function useTextSplit(pages) {
+  const [splitPages, setSplitPages] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 측정용 숨겨진 컨테이너 생성
+    const probe = document.createElement('div');
+    probe.style.cssText = `
+      position: fixed;
+      top: 0; left: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: -9999;
+      width: 100vw;
+      overflow: hidden;
+    `;
+    document.body.appendChild(probe);
+
+    // 텍스트 영역의 실제 가용 높이 계산
+    // 전체 화면 높이에서 상하 패딩(top: 2rem, bottom: 5rem ≈ 112px) + 페이지번호(~40px) 빼기
+    const availableHeight = window.innerHeight - 112 - 40 - 16;
+
+    // 폰트/줄높이와 동일한 스타일의 측정 컨테이너
+    const measurer = document.createElement('div');
+    measurer.style.cssText = `
+      font-family: 'Nanum Myeongjo', 'Noto Serif KR', Georgia, serif;
+      font-size: clamp(0.97rem, 2.4vw, 1.08rem);
+      line-height: 2.05;
+      color: transparent;
+      letter-spacing: 0.01em;
+      word-break: keep-all;
+      white-space: pre-line;
+      text-align: justify;
+      padding: 0 clamp(1.2rem, 6vw, 2.5rem);
+    `;
+    probe.appendChild(measurer);
+
+    const result = [];
+
+    pages.forEach((page) => {
+      const paragraphs = page.content.split('\n').filter((p) => p.trim() !== '');
+      const chunks = []; // 이 챕터의 텍스트 페이지들
+      let current = [];
+
+      for (let i = 0; i < paragraphs.length; i++) {
+        const candidate = [...current, paragraphs[i]];
+        measurer.textContent = candidate.join('\n\n');
+        const h = measurer.getBoundingClientRect().height;
+
+        if (h > availableHeight && current.length > 0) {
+          // 현재까지의 내용으로 페이지 확정
+          chunks.push(current.join('\n\n'));
+          current = [paragraphs[i]];
+        } else {
+          current = candidate;
+        }
+      }
+      if (current.length > 0) chunks.push(current.join('\n\n'));
+
+      result.push({ ...page, chunks });
+    });
+
+    document.body.removeChild(probe);
+    setSplitPages(result);
+  }, []); // 마운트 시 1회
+
+  return splitPages;
+}
+
+// ── 전체 슬라이드 목록 생성 ──
+// 구조: [cover, illus_1, text_1a, text_1b?, ..., illus_2, text_2a, ..., author, interaction]
+function buildSlides(splitPages) {
+  if (!splitPages) return null;
+
+  const slides = [];
+  slides.push({ type: 'cover' });
+
+  splitPages.forEach((page) => {
+    // 삽화 슬라이드
+    slides.push({ type: 'illustration', page });
+    // 텍스트 슬라이드들
+    page.chunks.forEach((chunk, idx) => {
+      slides.push({
+        type: 'text',
+        page,
+        chunk,
+        chunkIdx: idx,
+        totalChunks: page.chunks.length,
+      });
+    });
+  });
+
+  slides.push({ type: 'author' });
+  slides.push({ type: 'interaction' });
+
+  return slides;
+}
 
 export default function BookPage() {
+  const splitPages = useTextSplit(BOOK.pages);
+  const slides = useMemo(() => buildSlides(splitPages), [splitPages]);
+
   const [current, setCurrent] = useState(0);
   const [animDir, setAnimDir] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  // 표지→1페이지 전환 중 상태
   const [coverFlipping, setCoverFlipping] = useState(false);
   const [coverFlipped, setCoverFlipped] = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
 
-  const goTo = useCallback((next) => {
-    if (isAnimating || coverFlipping) return;
-    if (next < 0 || next >= TOTAL) return;
+  const total = slides ? slides.length : 0;
 
-    // 표지 → 1페이지: 책 넘기기 애니메이션
+  const goTo = useCallback((next) => {
+    if (!slides) return;
+    if (isAnimating || coverFlipping) return;
+    if (next < 0 || next >= total) return;
+
+    // 표지 → 첫 삽화: 책 넘기기
     if (current === 0 && next === 1) {
       setCoverFlipping(true);
-      setTimeout(() => {
-        setCoverFlipped(true);
-      }, 50);
+      setTimeout(() => setCoverFlipped(true), 50);
       setTimeout(() => {
         setCurrent(1);
         setCoverFlipping(false);
@@ -159,14 +260,11 @@ export default function BookPage() {
       }, 900);
       return;
     }
-
-    // 1페이지 → 표지: 역방향 넘기기
+    // 첫 삽화 → 표지
     if (current === 1 && next === 0) {
       setCoverFlipping(true);
       setCoverFlipped(true);
-      setTimeout(() => {
-        setCoverFlipped(false);
-      }, 50);
+      setTimeout(() => setCoverFlipped(false), 50);
       setTimeout(() => {
         setCurrent(0);
         setCoverFlipping(false);
@@ -183,7 +281,7 @@ export default function BookPage() {
       setAnimDir(null);
       setIsAnimating(false);
     }, 380);
-  }, [current, isAnimating, coverFlipping]);
+  }, [current, isAnimating, coverFlipping, slides, total]);
 
   const goNext = useCallback(() => goTo(current + 1), [current, goTo]);
   const goPrev = useCallback(() => goTo(current - 1), [current, goTo]);
@@ -213,14 +311,19 @@ export default function BookPage() {
     touchStartY.current = null;
   };
 
-  // 표지 전환 애니메이션 중일 때 렌더
+  // 텍스트 분할 전 로딩
+  if (!slides) {
+    return (
+      <div className="book-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--ink-faint)', fontSize: '0.9rem', letterSpacing: '0.2em' }}>페이지를 준비하는 중…</p>
+      </div>
+    );
+  }
+
+  // 표지 넘기기 애니메이션
   if (coverFlipping) {
     return (
-      <div
-        className="book-root"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
+      <div className="book-root" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <CoverFlipScene
           book={BOOK}
           flipped={coverFlipped}
@@ -230,6 +333,13 @@ export default function BookPage() {
     );
   }
 
+  const currentSlide = slides[current];
+
+  // 페이지 인디케이터: cover·author·interaction 제외한 순수 콘텐츠 슬라이드
+  const contentSlides = slides.filter(s => s.type === 'illustration' || s.type === 'text');
+  const contentIdx = contentSlides.indexOf(currentSlide);
+  const showIndicator = contentIdx >= 0;
+
   return (
     <div
       className="book-root"
@@ -237,81 +347,84 @@ export default function BookPage() {
       onTouchEnd={onTouchEnd}
     >
       <div className={`slide-container${animDir ? ` anim-${animDir}` : ''}`}>
-        <SlideRenderer current={current} book={BOOK} />
+        <SlideRenderer slide={currentSlide} book={BOOK} />
       </div>
 
       {current > 0 && (
         <button className="nav-btn nav-prev" onClick={goPrev} aria-label="이전 페이지">‹</button>
       )}
-      {current < TOTAL - 1 && (
+      {current < total - 1 && (
         <button className="nav-btn nav-next" onClick={goNext} aria-label="다음 페이지">›</button>
       )}
 
-      {current > 0 && current < TOTAL - 1 && (
-        <div className="page-indicator">{current} / {TOTAL - 2}</div>
+      {showIndicator && (
+        <div className="page-indicator">
+          {contentIdx + 1} / {contentSlides.length}
+        </div>
       )}
     </div>
   );
 }
 
-/* ── 책 넘기기 3D 씬 ── */
-function CoverFlipScene({ book, flipped, firstPage }) {
+/* ── 슬라이드 렌더러 ── */
+function SlideRenderer({ slide, book }) {
+  if (!slide) return null;
+  switch (slide.type) {
+    case 'cover':       return <CoverSlide book={book} />;
+    case 'illustration': return <IllustrationSlide page={slide.page} />;
+    case 'text':        return <TextSlide slide={slide} />;
+    case 'author':      return <AuthorSlide book={book} />;
+    case 'interaction': return <InteractionSlide />;
+    default:            return null;
+  }
+}
+
+/* ── 삽화 풀스크린 슬라이드 ── */
+function IllustrationSlide({ page }) {
   return (
-    <div className="flip-scene">
-      {/* 배경: 첫 페이지가 뒤에 깔려 있음 */}
-      <div className="flip-back-page">
-        <div className="flip-back-illustration">
-          <img src={firstPage.illustration} alt="1페이지 삽화" />
+    <div className="slide slide-illustration">
+      <div className="illus-full-wrap">
+        <img
+          className="illus-full-img"
+          src={page.illustration}
+          alt={`${page.id}번 챕터 삽화`}
+        />
+        <div className="illus-overlay" />
+        <div className="illus-chapter-label">
+          <span className="illus-chapter-num">{page.id}</span>
         </div>
-        <div className="flip-back-text">
-          <div className="story-page-num">페이지 1</div>
-          <div className="story-content first-page">{firstPage.content}</div>
-        </div>
-      </div>
-
-      {/* 3D 책 컨테이너 - perspective */}
-      <div className="flip-book-wrap">
-        {/* 책 왼쪽 절반 (spine 쪽, 고정) */}
-        <div className="flip-book-left">
-          <div className="flip-spine" />
-          <div className="flip-left-cover">
-            <img src={book.coverImage} alt="표지" />
-            {/* 왼쪽 절반 표지 이미지 — clip */}
-          </div>
-        </div>
-
-        {/* 페이지가 넘어가는 오른쪽 절반 */}
-        <div className={`flip-page-wrap${flipped ? ' flipped' : ''}`}>
-          {/* 앞면: 표지 오른쪽 */}
-          <div className="flip-page-front">
-            <img src={book.coverImage} alt="표지" />
-            <div className="flip-page-sheen" />
-          </div>
-          {/* 뒷면: 첫 페이지 왼쪽 절반 */}
-          <div className="flip-page-back">
-            <div className="flip-page-back-inner">
-              <p className="flip-back-page-num">페이지 1</p>
-              <p className="flip-back-preview">{firstPage.content.slice(0, 80)}…</p>
-            </div>
-          </div>
+        <div className="illus-hint">
+          <span>계속 읽기</span>
+          <span className="illus-hint-arrow">›</span>
         </div>
       </div>
-
-      {/* 그림자 */}
-      <div className={`flip-shadow${flipped ? ' shadow-spread' : ''}`} />
     </div>
   );
 }
 
-function SlideRenderer({ current, book }) {
-  if (current === 0) return <CoverSlide book={book} />;
-  if (current >= 1 && current <= book.pages.length)
-    return <StorySlide page={book.pages[current - 1]} pageNum={current} />;
-  if (current === book.pages.length + 1) return <AuthorSlide book={book} />;
-  if (current === book.pages.length + 2) return <InteractionSlide />;
-  return null;
+/* ── 텍스트 전용 슬라이드 ── */
+function TextSlide({ slide }) {
+  const { page, chunk, chunkIdx, totalChunks } = slide;
+  const isFirst = chunkIdx === 0;
+  const isFirstPage = page.id === 1 && isFirst;
+
+  return (
+    <div className="slide slide-text-only">
+      <div className="text-only-inner">
+        <div className="story-page-num">
+          {totalChunks > 1
+            ? `챕터 ${page.id}  ·  ${chunkIdx + 1} / ${totalChunks}`
+            : `챕터 ${page.id}`}
+        </div>
+        <div className={`story-content${isFirstPage ? ' first-page' : ''}`}>
+          {chunk}
+        </div>
+      </div>
+    </div>
+  );
 }
 
+/* ── 표지 슬라이드 ── */
 function CoverSlide({ book }) {
   return (
     <div className="slide slide-cover">
@@ -329,24 +442,48 @@ function CoverSlide({ book }) {
   );
 }
 
-function StorySlide({ page, pageNum }) {
+/* ── 책 넘기기 3D 씬 ── */
+function CoverFlipScene({ book, flipped, firstPage }) {
   return (
-    <div className="slide slide-story">
-      <div className="story-inner">
-        <div className="story-illustration">
-          <img src={page.illustration} alt={`${pageNum}페이지 삽화`} />
+    <div className="flip-scene">
+      <div className="flip-back-page">
+        <div className="flip-back-illustration">
+          <img src={firstPage.illustration} alt="1페이지 삽화" />
         </div>
-        <div className="story-text-area">
-          <div className="story-page-num">페이지 {pageNum}</div>
-          <div className={`story-content${pageNum === 1 ? ' first-page' : ''}`}>
-            {page.content}
+        <div className="flip-back-text">
+          <div className="story-page-num">챕터 1</div>
+          <div className="story-content first-page">{firstPage.content}</div>
+        </div>
+      </div>
+
+      <div className="flip-book-wrap">
+        <div className="flip-book-left">
+          <div className="flip-spine" />
+          <div className="flip-left-cover">
+            <img src={book.coverImage} alt="표지" />
+          </div>
+        </div>
+
+        <div className={`flip-page-wrap${flipped ? ' flipped' : ''}`}>
+          <div className="flip-page-front">
+            <img src={book.coverImage} alt="표지" />
+            <div className="flip-page-sheen" />
+          </div>
+          <div className="flip-page-back">
+            <div className="flip-page-back-inner">
+              <p className="flip-back-page-num">챕터 1</p>
+              <p className="flip-back-preview">{firstPage.content.slice(0, 80)}…</p>
+            </div>
           </div>
         </div>
       </div>
+
+      <div className={`flip-shadow${flipped ? ' shadow-spread' : ''}`} />
     </div>
   );
 }
 
+/* ── 작가의 말 ── */
 function AuthorSlide({ book }) {
   return (
     <div className="slide slide-author">
@@ -365,6 +502,7 @@ function AuthorSlide({ book }) {
   );
 }
 
+/* ── 인터랙션 ── */
 function InteractionSlide() {
   return (
     <div className="slide slide-interaction">
