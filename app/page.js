@@ -149,9 +149,13 @@ function useTextSplit(pages) {
     `;
     document.body.appendChild(probe);
 
-    // 텍스트 영역의 실제 가용 높이 계산
-    // 전체 화면 높이에서 상하 패딩(top: 2rem, bottom: 5rem ≈ 112px) + 페이지번호(~40px) 빼기
-    const availableHeight = window.innerHeight - 112 - 40 - 16;
+    // 삽화 높이 근사값 (CSS clamp(160px, 32svh, 260px))
+    const illusHeight = Math.min(260, Math.max(160, window.innerHeight * 0.32));
+    const overhead = 112 + 40 + 16;
+    // 첫 chunk는 삽화 공간만큼 줄어든 가용 높이
+    const availableWithIllus = window.innerHeight - overhead - illusHeight;
+    // 이후 chunk는 텍스트만
+    const availableText = window.innerHeight - overhead;
 
     // 폰트/줄높이와 동일한 스타일의 측정 컨테이너
     const measurer = document.createElement('div');
@@ -172,18 +176,20 @@ function useTextSplit(pages) {
 
     pages.forEach((page) => {
       const paragraphs = page.content.split('\n').filter((p) => p.trim() !== '');
-      const chunks = []; // 이 챕터의 텍스트 페이지들
+      const chunks = [];
       let current = [];
+      let isFirstChunk = true;
 
       for (let i = 0; i < paragraphs.length; i++) {
         const candidate = [...current, paragraphs[i]];
         measurer.textContent = candidate.join('\n\n');
         const h = measurer.getBoundingClientRect().height;
+        const limit = isFirstChunk ? availableWithIllus : availableText;
 
-        if (h > availableHeight && current.length > 0) {
-          // 현재까지의 내용으로 페이지 확정
+        if (h > limit && current.length > 0) {
           chunks.push(current.join('\n\n'));
           current = [paragraphs[i]];
+          isFirstChunk = false;
         } else {
           current = candidate;
         }
@@ -201,7 +207,7 @@ function useTextSplit(pages) {
 }
 
 // ── 전체 슬라이드 목록 생성 ──
-// 구조: [cover, illus_1, text_1a, text_1b?, ..., illus_2, text_2a, ..., author, interaction]
+// 구조: [cover, story_1a(삽화+텍스트), text_1b?, ..., story_2a, ..., author, interaction]
 function buildSlides(splitPages) {
   if (!splitPages) return null;
 
@@ -209,17 +215,14 @@ function buildSlides(splitPages) {
   slides.push({ type: 'cover' });
 
   splitPages.forEach((page) => {
-    // 삽화 슬라이드
-    slides.push({ type: 'illustration', page });
-    // 텍스트 슬라이드들
     page.chunks.forEach((chunk, idx) => {
-      slides.push({
-        type: 'text',
-        page,
-        chunk,
-        chunkIdx: idx,
-        totalChunks: page.chunks.length,
-      });
+      if (idx === 0) {
+        // 첫 chunk: 삽화 + 텍스트
+        slides.push({ type: 'story', page, chunk, chunkIdx: idx, totalChunks: page.chunks.length });
+      } else {
+        // 나머지: 텍스트만
+        slides.push({ type: 'text', page, chunk, chunkIdx: idx, totalChunks: page.chunks.length });
+      }
     });
   });
 
@@ -332,7 +335,7 @@ function SlideRenderer({ slide, book }) {
   if (!slide) return null;
   switch (slide.type) {
     case 'cover':       return <CoverSlide book={book} />;
-    case 'illustration': return <IllustrationSlide page={slide.page} />;
+    case 'story':       return <StorySlide slide={slide} />;
     case 'text':        return <TextSlide slide={slide} />;
     case 'author':      return <AuthorSlide book={book} />;
     case 'interaction': return <InteractionSlide />;
@@ -340,53 +343,50 @@ function SlideRenderer({ slide, book }) {
   }
 }
 
-/* ── 대화("…") 사이에 줄바꿈 삽입 ──
-   같은 문장 안에 닫는따옴표 + 공백 + 여는따옴표가 연속되면 그 사이를 \n으로 분리 */
+/* ── 대화 줄바꿈 포매터 ── */
 function formatDialogue(text) {
-  // '" "' 패턴: 닫는 큰따옴표 뒤 공백 뒤 여는 큰따옴표
-  return text.replace(/"\s+"/g, '"\n"');
+  return text
+    .replace(/([^"\n])\s*"/g, '$1\n"')
+    .replace(/"\s+/g, '"\n');
 }
 
-/* ── 삽화 슬라이드 — 이미지 전체 보임 (contain) + 종이 배경 ── */
-function IllustrationSlide({ page }) {
+/* ── 삽화 + 텍스트 슬라이드 (챕터 첫 페이지) ── */
+function StorySlide({ slide }) {
+  const { page, chunk, totalChunks } = slide;
+  const isFirstPage = page.id === 1;
+  const formatted = formatDialogue(chunk);
+
   return (
-    <div className="slide slide-illustration">
-      <div className="illus-full-wrap">
-        {/* 종이 배경 — 이미지가 contain 될 때 남는 여백 */}
-        <div className="illus-paper-bg" />
-        <img
-          className="illus-full-img"
-          src={page.illustration}
-          alt={`${page.id}번 챕터 삽화`}
-        />
-        <div className="illus-chapter-label">
-          <span className="illus-chapter-num">{page.id}</span>
+    <div className="slide slide-story">
+      <div className="story-inner">
+        <div className="story-illustration">
+          <img src={page.illustration} alt={`챕터 ${page.id} 삽화`} />
         </div>
-        <div className="illus-hint">
-          <span>계속 읽기</span>
-          <span className="illus-hint-arrow">›</span>
+        <div className="story-text-area">
+          <div className="story-page-num">
+            {totalChunks > 1 ? `챕터 ${page.id}  ·  1 / ${totalChunks}` : `챕터 ${page.id}`}
+          </div>
+          <div className={`story-content${isFirstPage ? ' first-page' : ''}`}>
+            {formatted}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── 텍스트 전용 슬라이드 ── */
+/* ── 텍스트 전용 슬라이드 (챕터 이후 페이지) ── */
 function TextSlide({ slide }) {
   const { page, chunk, chunkIdx, totalChunks } = slide;
-  const isFirst = chunkIdx === 0;
-  const isFirstPage = page.id === 1 && isFirst;
   const formatted = formatDialogue(chunk);
 
   return (
     <div className="slide slide-text-only">
       <div className="text-only-inner">
         <div className="story-page-num">
-          {totalChunks > 1
-            ? `챕터 ${page.id}  ·  ${chunkIdx + 1} / ${totalChunks}`
-            : `챕터 ${page.id}`}
+          {`챕터 ${page.id}  ·  ${chunkIdx + 1} / ${totalChunks}`}
         </div>
-        <div className={`story-content${isFirstPage ? ' first-page' : ''}`}>
+        <div className="story-content">
           {formatted}
         </div>
       </div>

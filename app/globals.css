@@ -605,3 +605,66 @@ body::before {
   overflow: hidden;
 }
 
+/* ── 삽화 + 텍스트 슬라이드 (story) ── */
+.slide-story {
+  padding: 0;
+  align-items: stretch;
+}
+
+.story-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+.story-illustration {
+  flex: 0 0 auto;
+  width: 100%;
+  height: clamp(160px, 32svh, 260px);
+  overflow: hidden;
+  position: relative;
+}
+
+.story-illustration::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 55%, var(--paper-dark) 100%);
+  pointer-events: none;
+}
+
+.story-illustration img {
+  width: 100%;
+  height: 100%;
+  /* contain: 이미지 전체가 잘리지 않고 보임 */
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+  background: var(--paper-dark);
+  filter: sepia(8%) contrast(1.04) brightness(0.95);
+}
+
+.story-text-area {
+  flex: 1;
+  padding: 1.2rem clamp(1.2rem, 6vw, 2.5rem) 5rem;
+  background: var(--paper-dark);
+  overflow: hidden;
+}
+
+/* ── 텍스트 전용 슬라이드 ── */
+.slide-text-only {
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.text-only-inner {
+  width: 100%;
+  height: 100%;
+  padding: 2rem clamp(1.2rem, 6vw, 2.5rem) 5rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-dark);
+  overflow: hidden;
+}
