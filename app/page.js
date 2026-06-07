@@ -464,6 +464,31 @@ function useTextSplit(pages) {
 
     const result = [];
 
+    pages.forEach((page) => {
+      const paragraphs = page.content.split('\n').filter((p) => p.trim() !== '');
+      const chunks = [];
+      let current = [];
+      let isFirstChunk = true;
+
+      for (let i = 0; i < paragraphs.length; i++) {
+        const candidate = [...current, paragraphs[i]];
+        measurer.textContent = candidate.join('\n\n');
+        const h = measurer.getBoundingClientRect().height;
+        const limit = isFirstChunk ? availableWithIllus : availableText;
+
+        if (h > limit && current.length > 0) {
+          chunks.push(current.join('\n\n'));
+          current = [paragraphs[i]];
+          isFirstChunk = false;
+        } else {
+          current = candidate;
+        }
+      }
+      if (current.length > 0) chunks.push(current.join('\n\n'));
+
+      result.push({ ...page, chunks });
+    });
+
     document.body.removeChild(probe);
     setSplitPages(result);
   }, []); // 마운트 시 1회
@@ -622,17 +647,6 @@ function SlideRenderer({ slide, book }) {
     case 'interaction': return <InteractionSlide />;
     default:            return null;
   }
-}
-
-/* ── 대화 줄바꿈 포매터 ── */
-function formatDialogue(text) {
-  return text
-    // 1) 닫는따옴표 뒤 공백: 줄바꿈으로 분리 ("..." "..." 패턴)
-    .replace(/"[ \t]+"/g, '"\n"')
-    // 2) 닫는따옴표 뒤 일반 텍스트(서술): 줄바꿈으로 분리
-    .replace(/"[ \t]+([^"])/g, '"\n$1')
-    // 3) 서술문 뒤 여는따옴표: 앞에 줄바꿈 삽입 (줄 시작이 아닌 경우만)
-    .replace(/([^\n"]) *"/g, '$1\n"');
 }
 
 /* ── 삽화 + 텍스트 슬라이드 (챕터 첫 페이지) ── */
