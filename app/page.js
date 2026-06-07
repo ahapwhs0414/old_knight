@@ -495,7 +495,7 @@ function useTextSplit(pages) {
           current = candidate;
         }
       }
-      if (current.length > 0) chunks.push(current.join('\n\n'));
+      if (current.length > 0) chunks.push(current.join('\n'));
 
       result.push({ ...page, chunks });
     });
